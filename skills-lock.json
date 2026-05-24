@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "ethglobal-skills": {
+      "source": "ethglobal-skills/repo",
+      "sourceType": "github",
+      "skillPath": "skills/ethglobal-skills/SKILL.md",
+      "computedHash": "01d18b352aeaddb5a7f44c43d2d3e5b71f708a0a78311465485fa5dae8a4563f"
+    }
+  }
+}
