@@ -364,3 +364,25 @@ public entry fun refine(
     // Transfer node to sender
     transfer::public_transfer(node, sender);
 }
+
+// --- Oracle Functions ---
+
+/// Updates a node's fitness score. Can only be called by the holder of the FitnessOracleCap.
+public entry fun update_fitness(
+    _cap: &FitnessOracleCap,
+    node: &mut KnowledgeNode,
+    new_score: u64,
+    new_citation_count: u64,
+    _ctx: &mut TxContext
+) {
+    let old_score = node.fitness_score;
+    node.fitness_score = new_score;
+    node.citation_count = new_citation_count;
+
+    event::emit(FitnessUpdated {
+        node_id: object::id(node),
+        old_score,
+        new_score,
+        citation_count: new_citation_count,
+    });
+}
