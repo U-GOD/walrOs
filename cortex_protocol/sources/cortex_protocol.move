@@ -227,3 +227,71 @@ public entry fun contribute(
     // Transfer node to sender
     transfer::public_transfer(node, sender);
 }
+
+/// Adds a challenge node disputing an existing knowledge node.
+public entry fun challenge(
+    topic: &mut TopicRoot,
+    blob_id: String,
+    model_name: String,
+    disputed_node_id: ID,
+    clock: &Clock,
+    ctx: &mut TxContext
+) {
+    let sender = tx_context::sender(ctx);
+    let current_time = clock.timestamp_ms();
+
+    let node_uid = object::new(ctx);
+    let node_id = object::uid_to_inner(&node_uid);
+
+    // Create the KnowledgeNode
+    let node = KnowledgeNode {
+        id: node_uid,
+        topic_id: object::id(topic),
+        blob_id,
+        node_type: CHALLENGE,
+        depth: 1, 
+        agent_address: sender,
+        model_name,
+        created_at: current_time,
+        fitness_score: 100,
+        citation_count: 0,
+        is_sealed: false,
+        lineage_parents: vector[disputed_node_id],
+    };
+
+    // Create LineageEdge for the challenge
+    let edge = LineageEdge {
+        id: object::new(ctx),
+        from_node_id: disputed_node_id,
+        to_node_id: node_id,
+        relationship: CHALLENGES,
+    };
+    transfer::public_transfer(edge, sender);
+
+    // Update topic
+    topic.total_nodes = topic.total_nodes + 1;
+
+    // Emit standard node creation event
+    event::emit(KnowledgeNodeCreated {
+        node_id,
+        topic_id: node.topic_id,
+        blob_id: node.blob_id,
+        node_type: node.node_type,
+        depth: node.depth,
+        agent_address: node.agent_address,
+        model_name: node.model_name,
+        parent_ids: node.lineage_parents,
+    });
+
+    // Emit challenge-specific event
+    event::emit(ChallengeCreated {
+        challenger_node_id: node_id,
+        disputed_node_id,
+        topic_id: node.topic_id,
+        agent_address: sender,
+    });
+
+    // Transfer node to sender
+    transfer::public_transfer(node, sender);
+}
+
