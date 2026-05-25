@@ -107,7 +107,7 @@ fun init(ctx: &mut TxContext) {
 // --- Core Entry Functions ---
 
 /// Creates a new TopicRoot (shared object) and a root KnowledgeNode (transferred to creator).
-public entry fun create_topic(topic_text: String, clock: &Clock, ctx: &mut TxContext) {
+public fun create_topic(topic_text: String, clock: &Clock, ctx: &mut TxContext) {
     let topic_id_uid = object::new(ctx);
     let topic_id = object::uid_to_inner(&topic_id_uid);
     let creator = tx_context::sender(ctx);
@@ -164,7 +164,7 @@ public entry fun create_topic(topic_text: String, clock: &Clock, ctx: &mut TxCon
 }
 
 /// Adds a new knowledge contribution to an existing topic.
-public entry fun contribute(
+public fun contribute(
     topic: &mut TopicRoot,
     blob_id: String,
     model_name: String,
@@ -229,7 +229,7 @@ public entry fun contribute(
 }
 
 /// Adds a challenge node disputing an existing knowledge node.
-public entry fun challenge(
+public fun challenge(
     topic: &mut TopicRoot,
     blob_id: String,
     model_name: String,
@@ -296,7 +296,7 @@ public entry fun challenge(
 }
 
 /// Adds a refinement or synthesis node resolving challenges or building on contributions.
-public entry fun refine(
+public fun refine(
     topic: &mut TopicRoot,
     blob_id: String,
     model_name: String,
@@ -368,7 +368,7 @@ public entry fun refine(
 // --- Oracle Functions ---
 
 /// Updates a node's fitness score. Can only be called by the holder of the FitnessOracleCap.
-public entry fun update_fitness(
+public fun update_fitness(
     _cap: &FitnessOracleCap,
     node: &mut KnowledgeNode,
     new_score: u64,
