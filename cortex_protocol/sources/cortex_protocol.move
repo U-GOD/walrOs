@@ -295,3 +295,72 @@ public entry fun challenge(
     transfer::public_transfer(node, sender);
 }
 
+/// Adds a refinement or synthesis node resolving challenges or building on contributions.
+public entry fun refine(
+    topic: &mut TopicRoot,
+    blob_id: String,
+    model_name: String,
+    parent_ids: vector<ID>,
+    clock: &Clock,
+    ctx: &mut TxContext
+) {
+    let sender = tx_context::sender(ctx);
+    let current_time = clock.timestamp_ms();
+
+    let node_uid = object::new(ctx);
+    let node_id = object::uid_to_inner(&node_uid);
+
+    let len = std::vector::length(&parent_ids);
+    // Auto-detect type: 1 parent = REFINEMENT, 2+ parents = SYNTHESIS
+    let node_type_val = if (len > 1) { SYNTHESIS } else { REFINEMENT };
+
+    // Create the KnowledgeNode
+    let node = KnowledgeNode {
+        id: node_uid,
+        topic_id: object::id(topic),
+        blob_id,
+        node_type: node_type_val,
+        depth: 1, 
+        agent_address: sender,
+        model_name,
+        created_at: current_time,
+        fitness_score: 100,
+        citation_count: 0,
+        is_sealed: false,
+        lineage_parents: parent_ids,
+    };
+
+    // Create LineageEdges
+    let mut i = 0;
+    let rel_type = if (len > 1) { SYNTHESIZES } else { REFINES };
+    
+    while (i < len) {
+        let parent_id = *std::vector::borrow(&parent_ids, i);
+        let edge = LineageEdge {
+            id: object::new(ctx),
+            from_node_id: parent_id,
+            to_node_id: node_id,
+            relationship: rel_type,
+        };
+        transfer::public_transfer(edge, sender);
+        i = i + 1;
+    };
+
+    // Update topic
+    topic.total_nodes = topic.total_nodes + 1;
+
+    // Emit event
+    event::emit(KnowledgeNodeCreated {
+        node_id,
+        topic_id: node.topic_id,
+        blob_id: node.blob_id,
+        node_type: node.node_type,
+        depth: node.depth,
+        agent_address: node.agent_address,
+        model_name: node.model_name,
+        parent_ids: node.lineage_parents,
+    });
+
+    // Transfer node to sender
+    transfer::public_transfer(node, sender);
+}
