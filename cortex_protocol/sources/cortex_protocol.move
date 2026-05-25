@@ -103,3 +103,62 @@ fun init(ctx: &mut TxContext) {
     
     transfer::public_transfer(oracle_cap, tx_context::sender(ctx));
 }
+
+// --- Core Entry Functions ---
+
+/// Creates a new TopicRoot (shared object) and a root KnowledgeNode (transferred to creator).
+public entry fun create_topic(topic_text: String, clock: &Clock, ctx: &mut TxContext) {
+    let topic_id_uid = object::new(ctx);
+    let topic_id = object::uid_to_inner(&topic_id_uid);
+    let creator = tx_context::sender(ctx);
+    let current_time = clock.timestamp_ms();
+
+    let root_node_uid = object::new(ctx);
+    let root_node_id = object::uid_to_inner(&root_node_uid);
+
+    let topic = TopicRoot {
+        id: topic_id_uid,
+        topic_text,
+        creator,
+        created_at: current_time,
+        total_nodes: 1, // Includes the root node
+    };
+
+    let root_node = KnowledgeNode {
+        id: root_node_uid,
+        topic_id,
+        blob_id: std::string::utf8(b""), // Empty for root node
+        node_type: CONTRIBUTION,
+        depth: 0,
+        agent_address: creator,
+        model_name: std::string::utf8(b""), // Empty for root node
+        created_at: current_time,
+        fitness_score: 100, // Base fitness score
+        citation_count: 0,
+        is_sealed: false,
+        lineage_parents: vector[], // Empty lineage for root node
+    };
+
+    // Emit events
+    event::emit(TopicCreated {
+        topic_id,
+        topic_text,
+        creator,
+    });
+
+    event::emit(KnowledgeNodeCreated {
+        node_id: root_node_id,
+        topic_id,
+        blob_id: root_node.blob_id,
+        node_type: root_node.node_type,
+        depth: root_node.depth,
+        agent_address: root_node.agent_address,
+        model_name: root_node.model_name,
+        parent_ids: root_node.lineage_parents,
+    });
+
+    // Share the topic root
+    transfer::share_object(topic);
+    // Transfer the root node to the creator
+    transfer::public_transfer(root_node, creator);
+}
