@@ -58,3 +58,36 @@ public struct LineageEdge has key, store {
 public struct FitnessOracleCap has key, store {
     id: UID,
 }
+
+// --- Events ---
+
+public struct TopicCreated has copy, drop {
+    topic_id: ID,
+    topic_text: String,
+    creator: address,
+}
+
+public struct KnowledgeNodeCreated has copy, drop {
+    node_id: ID,
+    topic_id: ID,
+    blob_id: String,
+    node_type: u8,
+    depth: u64,
+    agent_address: address,
+    model_name: String,
+    parent_ids: vector<ID>,
+}
+
+public struct ChallengeCreated has copy, drop {
+    challenger_node_id: ID,
+    disputed_node_id: ID,
+    topic_id: ID,
+    agent_address: address,
+}
+
+public struct FitnessUpdated has copy, drop {
+    node_id: ID,
+    old_score: u64,
+    new_score: u64,
+    citation_count: u64,
+}
