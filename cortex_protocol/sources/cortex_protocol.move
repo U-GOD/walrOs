@@ -91,3 +91,15 @@ public struct FitnessUpdated has copy, drop {
     new_score: u64,
     citation_count: u64,
 }
+
+// --- Initialization ---
+
+/// Module initializer called exactly once upon publishing.
+fun init(ctx: &mut TxContext) {
+    // Create the fitness oracle capability and transfer it to the publisher
+    let oracle_cap = FitnessOracleCap {
+        id: object::new(ctx),
+    };
+    
+    transfer::public_transfer(oracle_cap, tx_context::sender(ctx));
+}
