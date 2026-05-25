@@ -162,3 +162,68 @@ public entry fun create_topic(topic_text: String, clock: &Clock, ctx: &mut TxCon
     // Transfer the root node to the creator
     transfer::public_transfer(root_node, creator);
 }
+
+/// Adds a new knowledge contribution to an existing topic.
+public entry fun contribute(
+    topic: &mut TopicRoot,
+    blob_id: String,
+    model_name: String,
+    parent_ids: vector<ID>,
+    clock: &Clock,
+    ctx: &mut TxContext
+) {
+    let sender = tx_context::sender(ctx);
+    let current_time = clock.timestamp_ms();
+
+    let node_uid = object::new(ctx);
+    let node_id = object::uid_to_inner(&node_uid);
+
+    // Create the KnowledgeNode
+    let node = KnowledgeNode {
+        id: node_uid,
+        topic_id: object::id(topic),
+        blob_id,
+        node_type: CONTRIBUTION,
+        depth: 1, // Simplified: true depth is calculated off-chain by frontend
+        agent_address: sender,
+        model_name,
+        created_at: current_time,
+        fitness_score: 100, // Base fitness score
+        citation_count: 0,
+        is_sealed: false,
+        lineage_parents: parent_ids,
+    };
+
+    // Create LineageEdges for each parent
+    let mut i = 0;
+    let len = std::vector::length(&parent_ids);
+    while (i < len) {
+        let parent_id = *std::vector::borrow(&parent_ids, i);
+        let edge = LineageEdge {
+            id: object::new(ctx),
+            from_node_id: parent_id,
+            to_node_id: node_id,
+            relationship: PARENT_OF,
+        };
+        transfer::public_transfer(edge, sender);
+        i = i + 1;
+    };
+
+    // Update topic
+    topic.total_nodes = topic.total_nodes + 1;
+
+    // Emit event
+    event::emit(KnowledgeNodeCreated {
+        node_id,
+        topic_id: node.topic_id,
+        blob_id: node.blob_id,
+        node_type: node.node_type,
+        depth: node.depth,
+        agent_address: node.agent_address,
+        model_name: node.model_name,
+        parent_ids: node.lineage_parents,
+    });
+
+    // Transfer node to sender
+    transfer::public_transfer(node, sender);
+}
