@@ -5,11 +5,16 @@ import Header from "@/components/Header";
 import TopicSidebar from "@/components/TopicSidebar";
 import GraphCanvas from "@/components/GraphCanvas";
 import NodeDetailPanel from "@/components/NodeDetailPanel";
+import { useTopicGraph } from "@/hooks/useTopicGraph";
+import { GraphNode } from "@/lib/graph-helpers";
 
 export default function Home() {
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>("1");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+
+  const { graphData, loading: graphLoading } = useTopicGraph(selectedTopicId);
 
   return (
     <>
@@ -29,8 +34,13 @@ export default function Home() {
         />
 
         <GraphCanvas
+          graphData={graphData}
           onMenuOpen={() => setSidebarOpen(true)}
           onDetailToggle={() => setDetailOpen((prev) => !prev)}
+          onNodeSelect={(node) => {
+            setSelectedNode(node);
+            if (window.innerWidth < 1280) setDetailOpen(true);
+          }}
         />
 
         <NodeDetailPanel
