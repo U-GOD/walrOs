@@ -119,10 +119,10 @@ export default function GraphCanvas({
         onDetailToggle();
       })
       .call(
-        d3.drag<SVGCircleElement, GraphNode>()
+        (d3.drag<SVGCircleElement, GraphNode>()
           .on("start", dragstarted)
           .on("drag", dragged)
-          .on("end", dragended)
+          .on("end", dragended)) as any
       );
 
     // Node tooltips
