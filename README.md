@@ -1,4 +1,4 @@
-# CORTEX
+# WalrOS
 
 **The Collective Intelligence Operating System**
 
@@ -12,7 +12,7 @@ Built for the Sui Overflow Hackathon — Walrus Track.
 
 AI agents today are stateless and fragmented. They lose context between sessions, cannot reliably share knowledge across models or devices, and their memory is locked inside single applications.
 
-CORTEX solves this by introducing an evolutionary knowledge layer built on Walrus, MemWal, and Sui. Multiple AI agents contribute, challenge, and synthesize knowledge into a shared graph. Every piece of knowledge is cryptographically verifiable, has full provenance lineage, and is scored by a fitness algorithm that ensures the strongest ideas rise to the top.
+WalrOS solves this by introducing an evolutionary knowledge layer built on Walrus, MemWal, and Sui. Multiple AI agents contribute, challenge, and synthesize knowledge into a shared graph. Every piece of knowledge is cryptographically verifiable, has full provenance lineage, and is scored by a fitness algorithm that ensures the strongest ideas rise to the top.
 
 ### Core Thesis
 
@@ -24,7 +24,7 @@ CORTEX solves this by introducing an evolutionary knowledge layer built on Walru
 
 ```
 PRESENTATION LAYER (Walrus Sites)
-  CORTEX Explorer — Next.js static site deployed on Walrus
+  WalrOS Explorer — Next.js static site deployed on Walrus
   Knowledge Graph (D3.js) | Node Detail Panel | Live Activity Feed
 
 COORDINATION LAYER (Sui Blockchain)
@@ -44,7 +44,7 @@ AGENT LAYER (Local Processes)
 
 1. An agent generates a knowledge artifact using a local LLM (Ollama).
 2. The agent calls MemWal `remember()` to store the artifact on Walrus and receives a `blob_id`.
-3. The agent calls the CORTEX Move contract to register a `KnowledgeNode` on Sui with the `blob_id` and lineage pointers to parent nodes.
+3. The agent calls the WalrOS Move contract to register a `KnowledgeNode` on Sui with the `blob_id` and lineage pointers to parent nodes.
 4. Sui emits a typed event (`KnowledgeNodeCreated`).
 5. The frontend subscribes to Sui events and updates the D3.js knowledge graph in real time.
 6. The Fitness Oracle periodically scans all nodes, computes citation-based fitness scores, and updates them on-chain.
@@ -54,14 +54,14 @@ AGENT LAYER (Local Processes)
 
 ## Why Walrus-Native
 
-Every layer of CORTEX requires Walrus to function. This is not a bolt-on integration.
+Every layer of WalrOS requires Walrus to function. This is not a bolt-on integration.
 
 | Layer | Role of Walrus |
 |---|---|
 | Shared Memory | MemWal provides a decentralized namespace where agents from different sessions, models, and machines share the same knowledge pool. |
 | Knowledge Storage | Research documents and analysis reports are stored as erasure-coded blobs on Walrus. Too large for on-chain storage, too important for centralized databases. |
 | Index Layer | Sui objects serve as the index: lineage pointers, fitness scores, and access control live on-chain. The content lives on Walrus. |
-| Frontend Hosting | The CORTEX Explorer itself is deployed as a Walrus Site. The protocol and its interface are both decentralized. |
+| Frontend Hosting | The WalrOS Explorer itself is deployed as a Walrus Site. The protocol and its interface are both decentralized. |
 | Privacy | Seal integration enables encrypted knowledge nodes. Premium or sensitive knowledge is ownable and access-controlled. |
 
 ---
@@ -102,13 +102,13 @@ All components are free, open-source, and require zero paid API keys.
 ## Project Structure
 
 ```
-cortex/
+walros/
 |
-|-- cortex_protocol/              Sui Move smart contracts
+|-- walros_protocol/              Sui Move smart contracts
 |   |-- sources/
-|   |   |-- cortex_protocol.move  Core module: objects, events, entry functions
+|   |   |-- walros_protocol.move  Core module: objects, events, entry functions
 |   |-- tests/
-|   |   |-- cortex_protocol_tests.move
+|   |   |-- walros_protocol_tests.move
 |   |-- Move.toml
 |
 |-- agents/                       LangGraph.js agent processes
@@ -141,7 +141,7 @@ cortex/
 
 ## Smart Contract Design
 
-The CORTEX protocol is implemented as a single Sui Move module with four object types:
+The WalrOS protocol is implemented as a single Sui Move module with four object types:
 
 **KnowledgeNode** — The fundamental unit of knowledge. Each node is a Sui object storing a reference to a Walrus blob (`blob_id`), its type (contribution, challenge, refinement, or synthesis), lineage parent IDs, fitness score, and agent metadata.
 
@@ -208,7 +208,7 @@ npm install
 ### Build and Deploy Contracts
 
 ```bash
-cd cortex_protocol
+cd walros_protocol
 sui move build
 sui move test
 sui client publish --gas-budget 100000000
