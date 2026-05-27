@@ -1,7 +1,5 @@
-import { useState, useEffect } from 'react';
-import { suiClient, KnowledgeNodeCreatedEvent, TopicCreatedEvent } from '../lib/sui-client';
-import { PACKAGE_ID } from '../lib/constants';
-import { SuiEvent } from '@mysten/sui/client';
+import { useState, useEffect, useRef } from 'react';
+import { queryAllTopics, queryTopicEvents, TopicCreatedEvent, KnowledgeNodeCreatedEvent } from '../lib/sui-client';
 
 export type FeedEvent = {
   id: string;
@@ -13,73 +11,71 @@ export type FeedEvent = {
 
 export function useLiveEvents() {
   const [events, setEvents] = useState<FeedEvent[]>([]);
+  const seenIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    let unsubscribeNode: (() => void) | null = null;
-    let unsubscribeTopic: (() => void) | null = null;
+    let mounted = true;
 
-    async function subscribe() {
+    async function pollEvents() {
       try {
-        // Subscribe to KnowledgeNodeCreated events
-        const nodeSubId = await suiClient.subscribeEvent({
-          filter: { MoveEventType: `${PACKAGE_ID}::cortex_protocol::KnowledgeNodeCreated` },
-          onMessage: (suiEvent: SuiEvent) => {
-            const parsed = suiEvent.parsedJson as unknown as KnowledgeNodeCreatedEvent;
-            
-            let actionType = "Contribution";
-            if (parsed.node_type === 1) actionType = "Challenge";
-            if (parsed.node_type === 2) actionType = "Refinement";
-            if (parsed.node_type === 3) actionType = "Synthesis";
+        const newFeedEvents: FeedEvent[] = [];
 
-            const newEvent: FeedEvent = {
-              id: suiEvent.id.txDigest + suiEvent.id.eventSeq,
-              timestamp: Date.now(),
-              type: 'Node',
-              title: `New ${actionType} Node`,
-              message: `Agent ${parsed.agent_address.substring(0,6)}... added a node at depth ${parsed.depth}`
-            };
-            
-            setEvents(prev => [newEvent, ...prev].slice(0, 50)); // Keep last 50
-          }
-        });
-        
-        unsubscribeNode = () => {
-           // suiClient.unsubscribeEvent might not be universally supported depending on the SDK version,
-           // but normally it returns an unsubscribe ID. For now we will just log.
-           console.log("Unsubscribing from node events", nodeSubId);
-        };
-
-        // Subscribe to TopicCreated events
-        const topicSubId = await suiClient.subscribeEvent({
-          filter: { MoveEventType: `${PACKAGE_ID}::cortex_protocol::TopicCreated` },
-          onMessage: (suiEvent: SuiEvent) => {
-            const parsed = suiEvent.parsedJson as unknown as TopicCreatedEvent;
-            const newEvent: FeedEvent = {
-              id: suiEvent.id.txDigest + suiEvent.id.eventSeq,
+        // Poll Topics
+        const topics = await queryAllTopics();
+        for (const topic of topics) {
+          const topicEventId = `topic-${topic.topic_id}`;
+          if (!seenIds.current.has(topicEventId)) {
+            seenIds.current.add(topicEventId);
+            newFeedEvents.push({
+              id: topicEventId,
               timestamp: Date.now(),
               type: 'Topic',
               title: `New Topic Created`,
-              message: `"${parsed.topic_text}" by ${parsed.creator.substring(0,6)}...`
-            };
-            
-            setEvents(prev => [newEvent, ...prev].slice(0, 50));
+              message: `"${topic.topic_text}" by ${topic.creator.substring(0, 6)}...`
+            });
           }
-        });
 
-        unsubscribeTopic = () => {
-           console.log("Unsubscribing from topic events", topicSubId);
-        };
+          // Poll Nodes for this topic
+          const nodes = await queryTopicEvents(topic.topic_id);
+          for (const node of nodes) {
+            const nodeEventId = `node-${node.node_id}`;
+            if (!seenIds.current.has(nodeEventId)) {
+              seenIds.current.add(nodeEventId);
 
+              let actionType = "Contribution";
+              if (node.node_type === 1) actionType = "Challenge";
+              if (node.node_type === 2) actionType = "Refinement";
+              if (node.node_type === 3) actionType = "Synthesis";
+
+              newFeedEvents.push({
+                id: nodeEventId,
+                timestamp: Date.now(),
+                type: 'Node',
+                title: `New ${actionType} Node`,
+                message: `Agent ${node.agent_address.substring(0, 6)}... added a node at depth ${node.depth}`
+              });
+            }
+          }
+        }
+
+        if (mounted && newFeedEvents.length > 0) {
+          // Sort by timestamp just in case, though they are practically simultaneous here
+          setEvents(prev => [...newFeedEvents, ...prev].slice(0, 50));
+        }
       } catch (err) {
-        console.error("Failed to subscribe to Sui events:", err);
+        console.error("Polling error:", err);
       }
     }
 
-    subscribe();
+    // Initial poll
+    pollEvents();
+
+    // Poll every 5 seconds
+    const interval = setInterval(pollEvents, 5000);
 
     return () => {
-      if (unsubscribeNode) unsubscribeNode();
-      if (unsubscribeTopic) unsubscribeTopic();
+      mounted = false;
+      clearInterval(interval);
     };
   }, []);
 
