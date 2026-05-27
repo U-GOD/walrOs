@@ -1,7 +1,7 @@
-import { SuiClient } from '@mysten/sui/client';
+import { SuiJsonRpcClient as SuiClient } from '@mysten/sui/jsonRpc';
 import { PACKAGE_ID, SUI_RPC_URL } from './constants';
 
-export const suiClient = new SuiClient({ url: SUI_RPC_URL });
+export const suiClient = new SuiClient({ url: SUI_RPC_URL, network: 'testnet' });
 
 export interface TopicCreatedEvent {
   topic_id: string;
