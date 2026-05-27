@@ -38,7 +38,7 @@ async function main() {
 
     if (!agentType) {
         console.log(`
-CORTEX CLI Usage:
+WalrOS CLI Usage:
 
 1. Create a Topic:
    npm start -- --create-topic "Your topic text here"
