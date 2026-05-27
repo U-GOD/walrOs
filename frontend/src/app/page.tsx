@@ -6,15 +6,25 @@ import TopicSidebar from "@/components/TopicSidebar";
 import GraphCanvas from "@/components/GraphCanvas";
 import NodeDetailPanel from "@/components/NodeDetailPanel";
 import { useTopicGraph } from "@/hooks/useTopicGraph";
+import { useTopicList } from "@/hooks/useTopicList";
 import { GraphNode } from "@/lib/graph-helpers";
+import { useEffect } from "react";
 
 export default function Home() {
-  const [selectedTopicId, setSelectedTopicId] = useState<string | null>("1");
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
 
+  const { topics, loading: topicsLoading } = useTopicList();
   const { graphData, loading: graphLoading } = useTopicGraph(selectedTopicId);
+
+  // Auto-select the first topic when topics load, if none is selected
+  useEffect(() => {
+    if (topics.length > 0 && !selectedTopicId) {
+      setSelectedTopicId(topics[0].id);
+    }
+  }, [topics, selectedTopicId]);
 
   return (
     <>
@@ -23,7 +33,8 @@ export default function Home() {
       {/* Main layout — full height minus header */}
       <main className="flex-1 flex mt-[56px] h-[calc(100vh-56px)] relative">
         <TopicSidebar
-          topics={[]}
+          topics={topics}
+          loading={topicsLoading}
           selectedTopicId={selectedTopicId}
           onTopicSelect={(id) => {
             setSelectedTopicId(id);
