@@ -44,6 +44,7 @@ export default function Home() {
         />
 
         <NodeDetailPanel
+          node={selectedNode}
           isOpen={detailOpen}
           onClose={() => setDetailOpen(false)}
         />
