@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { GraphData, GraphNode, GraphLink } from "../lib/graph-helpers";
+import GraphLegend from "./GraphLegend";
 
 interface GraphCanvasProps {
   graphData: GraphData;
@@ -269,6 +270,9 @@ export default function GraphCanvas({
       >
         <span className="material-symbols-outlined text-[16px]">info</span> Details
       </button>
+
+      {/* Floating Graph Legend */}
+      <GraphLegend />
     </section>
   );
 }
