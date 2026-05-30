@@ -6,6 +6,7 @@ import { GraphData, GraphNode, GraphLink } from "../lib/graph-helpers";
 
 interface GraphCanvasProps {
   graphData: GraphData;
+  focusedNodeId?: string;
   onMenuOpen: () => void;
   onDetailToggle: () => void;
   onNodeSelect: (node: GraphNode) => void;
@@ -13,6 +14,7 @@ interface GraphCanvasProps {
 
 export default function GraphCanvas({
   graphData,
+  focusedNodeId,
   onMenuOpen,
   onDetailToggle,
   onNodeSelect,
@@ -173,6 +175,31 @@ export default function GraphCanvas({
       simulation.stop();
     };
   }, [graphData, onNodeSelect, onDetailToggle]);
+
+  // Effect to focus on a specific node
+  useEffect(() => {
+    if (!focusedNodeId || !svgRef.current || !zoomRef.current || !containerRef.current) return;
+    
+    const svg = d3.select(svgRef.current);
+    let targetNode: GraphNode | undefined;
+    
+    // Find the node datum from the rendered circles
+    svg.selectAll<SVGCircleElement, GraphNode>("circle").each(function(d) {
+      if (d.id === focusedNodeId) {
+        targetNode = d;
+      }
+    });
+
+    if (targetNode && targetNode.x !== undefined && targetNode.y !== undefined) {
+      const width = containerRef.current.clientWidth;
+      const height = containerRef.current.clientHeight;
+      
+      svg.transition().duration(750).call(
+        zoomRef.current.transform, 
+        d3.zoomIdentity.translate(width/2 - targetNode.x, height/2 - targetNode.y).scale(1.5)
+      );
+    }
+  }, [focusedNodeId, graphData]);
 
   // Zoom control handlers
   const handleZoomIn = () => {
