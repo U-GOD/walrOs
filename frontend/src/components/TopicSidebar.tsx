@@ -2,6 +2,8 @@
 
 import { TopicItem } from "../hooks/useTopicList";
 
+export type ViewMode = 'graph' | 'blobs' | 'topics' | 'status';
+
 interface TopicSidebarProps {
   topics: TopicItem[];
   loading?: boolean;
@@ -9,6 +11,8 @@ interface TopicSidebarProps {
   onTopicSelect: (id: string) => void;
   isOpen: boolean;
   onClose: () => void;
+  activeView: ViewMode;
+  onViewChange: (view: ViewMode) => void;
 }
 
 export default function TopicSidebar({
@@ -18,6 +22,8 @@ export default function TopicSidebar({
   onTopicSelect,
   isOpen,
   onClose,
+  activeView,
+  onViewChange,
 }: TopicSidebarProps) {
   return (
     <aside
@@ -103,25 +109,28 @@ export default function TopicSidebar({
       <div className="mt-auto border-t border-hairline p-md bg-surface-bright">
         <nav className="flex flex-col">
           {[
-            { icon: "account_tree", label: "Knowledge Graph", active: true },
-            { icon: "data_object", label: "Research Blobs" },
-            { icon: "format_list_bulleted", label: "Topic Indices" },
-            { icon: "query_stats", label: "System Status" },
-          ].map(({ icon, label, active }) => (
-            <a
-              key={label}
-              href="#"
-              className={`
-                flex items-center gap-md py-3 px-4 transition-cubic
-                font-label-md text-label-md uppercase tracking-widest text-primary
-                hover:bg-surface-container-high
-                ${active ? "bg-surface-container-high border-l-[3px] border-primary" : ""}
-              `}
-            >
-              <span className="material-symbols-outlined">{icon}</span>
-              {label}
-            </a>
-          ))}
+            { id: 'graph', icon: "account_tree", label: "Knowledge Graph" },
+            { id: 'blobs', icon: "data_object", label: "Research Blobs" },
+            { id: 'topics', icon: "format_list_bulleted", label: "Topic Indices" },
+            { id: 'status', icon: "query_stats", label: "System Status" },
+          ].map(({ id, icon, label }) => {
+            const isActive = activeView === id;
+            return (
+              <button
+                key={id}
+                onClick={() => onViewChange(id as ViewMode)}
+                className={`
+                  flex items-center gap-md py-3 px-4 transition-cubic text-left w-full
+                  font-label-md text-label-md uppercase tracking-widest text-primary
+                  hover:bg-surface-container-high
+                  ${isActive ? "bg-surface-container-high border-l-[3px] border-primary" : "border-l-[3px] border-transparent"}
+                `}
+              >
+                <span className="material-symbols-outlined">{icon}</span>
+                {label}
+              </button>
+            );
+          })}
         </nav>
       </div>
     </aside>
