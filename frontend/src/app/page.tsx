@@ -8,6 +8,8 @@ import NodeDetailPanel from "@/components/NodeDetailPanel";
 import ActivityFeed from "@/components/ActivityFeed";
 import SettingsModal from "@/components/SettingsModal";
 import BlobsListView from "@/components/BlobsListView";
+import TopicsListView from "@/components/TopicsListView";
+import SystemStatusView from "@/components/SystemStatusView";
 import { useTopicGraph } from "@/hooks/useTopicGraph";
 import { useTopicList } from "@/hooks/useTopicList";
 import { GraphNode } from "@/lib/graph-helpers";
@@ -87,15 +89,17 @@ export default function Home() {
         )}
 
         {activeView === "topics" && (
-          <section className="flex-1 bg-surface flex items-center justify-center">
-            <h2 className="text-on-surface-variant font-label-md">Topics List View (Coming Soon)</h2>
-          </section>
+          <TopicsListView 
+            topics={topics} 
+            onTopicSelect={(id) => {
+              setSelectedTopicId(id);
+              setActiveView("graph");
+            }}
+          />
         )}
 
         {activeView === "status" && (
-          <section className="flex-1 bg-surface flex items-center justify-center">
-            <h2 className="text-on-surface-variant font-label-md">System Status View (Coming Soon)</h2>
-          </section>
+          <SystemStatusView />
         )}
 
         <ActivityFeed />
