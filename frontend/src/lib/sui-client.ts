@@ -43,3 +43,14 @@ export async function queryTopicEvents(topicId: string): Promise<KnowledgeNodeCr
   // Filter by topic_id (Sui event queries don't easily filter by custom fields natively without indexing)
   return allEvents.filter(e => e.topic_id === topicId);
 }
+
+export async function queryAllNodes(): Promise<KnowledgeNodeCreatedEvent[]> {
+  const events = await suiClient.queryEvents({
+    query: {
+      MoveEventType: `${PACKAGE_ID}::cortex_protocol::KnowledgeNodeCreated`
+    },
+    order: 'descending'
+  });
+
+  return events.data.map(e => e.parsedJson as unknown as KnowledgeNodeCreatedEvent);
+}
