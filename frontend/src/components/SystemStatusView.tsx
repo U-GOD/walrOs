@@ -28,8 +28,8 @@ export default function SystemStatusView() {
       };
 
       const checkWalrus = async () => {
+        const start = performance.now();
         try {
-          const start = performance.now();
           // Simple fetch to see if aggregator is reachable
           await fetch(`${WALRUS_AGGREGATOR_URL}/v1/blobs/dummy`, { method: 'HEAD' });
           if (mounted) setWalrusLatency(Math.round(performance.now() - start));
