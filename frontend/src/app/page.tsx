@@ -6,6 +6,7 @@ import TopicSidebar from "@/components/TopicSidebar";
 import GraphCanvas from "@/components/GraphCanvas";
 import NodeDetailPanel from "@/components/NodeDetailPanel";
 import ActivityFeed from "@/components/ActivityFeed";
+import SettingsModal from "@/components/SettingsModal";
 import { useTopicGraph } from "@/hooks/useTopicGraph";
 import { useTopicList } from "@/hooks/useTopicList";
 import { GraphNode } from "@/lib/graph-helpers";
@@ -71,6 +72,11 @@ export default function Home() {
 
         <ActivityFeed />
       </main>
+
+      <SettingsModal 
+        isOpen={settingsOpen} 
+        onClose={() => setSettingsOpen(false)} 
+      />
     </>
   );
 }
