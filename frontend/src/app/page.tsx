@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Header from "@/components/Header";
-import TopicSidebar from "@/components/TopicSidebar";
+import TopicSidebar, { ViewMode } from "@/components/TopicSidebar";
 import GraphCanvas from "@/components/GraphCanvas";
 import NodeDetailPanel from "@/components/NodeDetailPanel";
 import ActivityFeed from "@/components/ActivityFeed";
@@ -18,6 +18,7 @@ export default function Home() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [activeView, setActiveView] = useState<ViewMode>("graph");
 
   const { topics, loading: topicsLoading } = useTopicList();
   const { graphData, loading: graphLoading } = useTopicGraph(selectedTopicId);
@@ -48,27 +49,55 @@ export default function Home() {
           selectedTopicId={selectedTopicId}
           onTopicSelect={(id) => {
             setSelectedTopicId(id);
+            setActiveView("graph");
             setSidebarOpen(false);
           }}
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
-        />
-
-        <GraphCanvas
-          graphData={graphData}
-          onMenuOpen={() => setSidebarOpen(true)}
-          onDetailToggle={() => setDetailOpen((prev) => !prev)}
-          onNodeSelect={(node) => {
-            setSelectedNode(node);
-            if (window.innerWidth < 1280) setDetailOpen(true);
+          activeView={activeView}
+          onViewChange={(view) => {
+            setActiveView(view);
+            setSidebarOpen(false);
           }}
         />
 
-        <NodeDetailPanel
-          node={selectedNode}
-          isOpen={detailOpen}
-          onClose={() => setDetailOpen(false)}
-        />
+        {activeView === "graph" && (
+          <>
+            <GraphCanvas
+              graphData={graphData}
+              onMenuOpen={() => setSidebarOpen(true)}
+              onDetailToggle={() => setDetailOpen((prev) => !prev)}
+              onNodeSelect={(node) => {
+                setSelectedNode(node);
+                if (window.innerWidth < 1280) setDetailOpen(true);
+              }}
+            />
+
+            <NodeDetailPanel
+              node={selectedNode}
+              isOpen={detailOpen}
+              onClose={() => setDetailOpen(false)}
+            />
+          </>
+        )}
+
+        {activeView === "blobs" && (
+          <section className="flex-1 bg-surface flex items-center justify-center">
+            <h2 className="text-on-surface-variant font-label-md">Research Blobs View (Coming Soon)</h2>
+          </section>
+        )}
+
+        {activeView === "topics" && (
+          <section className="flex-1 bg-surface flex items-center justify-center">
+            <h2 className="text-on-surface-variant font-label-md">Topics List View (Coming Soon)</h2>
+          </section>
+        )}
+
+        {activeView === "status" && (
+          <section className="flex-1 bg-surface flex items-center justify-center">
+            <h2 className="text-on-surface-variant font-label-md">System Status View (Coming Soon)</h2>
+          </section>
+        )}
 
         <ActivityFeed />
       </main>
