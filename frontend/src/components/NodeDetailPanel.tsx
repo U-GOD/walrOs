@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { GraphNode } from "../lib/graph-helpers";
 import { useWalrusBlob } from "../hooks/useWalrusBlob";
 
@@ -7,9 +9,12 @@ interface NodeDetailPanelProps {
   node: GraphNode | null;
   isOpen: boolean;
   onClose: () => void;
+  onFocus: () => void;
 }
 
-export default function NodeDetailPanel({ node, isOpen, onClose }: NodeDetailPanelProps) {
+export default function NodeDetailPanel({ node, isOpen, onClose, onFocus }: NodeDetailPanelProps) {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
   // Fetch blob data if a node is selected
   const { content, loading, error } = useWalrusBlob(node?.blobId || null);
 
@@ -25,8 +30,10 @@ export default function NodeDetailPanel({ node, isOpen, onClose }: NodeDetailPan
     }
   };
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
@@ -90,11 +97,13 @@ export default function NodeDetailPanel({ node, isOpen, onClose }: NodeDetailPan
                   {node.id}
                 </span>
                 <button
-                  className="text-outline hover:text-primary transition-cubic flex-shrink-0"
-                  onClick={() => copyToClipboard(node.id)}
+                  className={`text-outline transition-cubic flex-shrink-0 ${copiedId === 'object' ? 'text-green-500' : 'hover:text-primary'}`}
+                  onClick={() => copyToClipboard(node.id, 'object')}
                   title="Copy ID"
                 >
-                  <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                  <span className="material-symbols-outlined text-[16px]">
+                    {copiedId === 'object' ? 'check' : 'content_copy'}
+                  </span>
                 </button>
               </div>
             </div>
@@ -110,11 +119,13 @@ export default function NodeDetailPanel({ node, isOpen, onClose }: NodeDetailPan
                 </span>
                 {node.blobId && (
                   <button
-                    className="text-outline hover:text-primary transition-cubic flex-shrink-0"
-                    onClick={() => copyToClipboard(node.blobId)}
+                    className={`text-outline transition-cubic flex-shrink-0 ${copiedId === 'blob' ? 'text-green-500' : 'hover:text-primary'}`}
+                    onClick={() => copyToClipboard(node.blobId, 'blob')}
                     title="Copy Blob ID"
                   >
-                    <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                    <span className="material-symbols-outlined text-[16px]">
+                      {copiedId === 'blob' ? 'check' : 'content_copy'}
+                    </span>
                   </button>
                 )}
               </div>
@@ -183,7 +194,10 @@ export default function NodeDetailPanel({ node, isOpen, onClose }: NodeDetailPan
             >
               View on Walrus Explorer
             </button>
-            <button className="w-full bg-white text-primary font-label-md text-label-md uppercase tracking-widest py-3 border-hairline hover:bg-surface-container-low transition-cubic">
+            <button 
+              className="w-full bg-white text-primary font-label-md text-label-md uppercase tracking-widest py-3 border-hairline hover:bg-surface-container-low transition-cubic"
+              onClick={onFocus}
+            >
               Focus Node in Graph
             </button>
           </div>
