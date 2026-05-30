@@ -15,6 +15,7 @@ export default function Home() {
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
 
   const { topics, loading: topicsLoading } = useTopicList();
@@ -27,9 +28,16 @@ export default function Home() {
     }
   }, [topics, selectedTopicId]);
 
+  // Compute total blobs/nodes across all active topics
+  const totalBlobs = topics.reduce((acc, topic) => acc + topic.nodeCount, 0);
+
   return (
     <>
-      <Header />
+      <Header
+        topicCount={topics.length}
+        blobCount={totalBlobs}
+        onSettingsClick={() => setSettingsOpen(true)}
+      />
 
       {/* Main layout — full height minus header */}
       <main className="flex-1 flex mt-[56px] h-[calc(100vh-56px)] relative">
