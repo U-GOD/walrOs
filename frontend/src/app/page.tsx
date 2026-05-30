@@ -21,6 +21,7 @@ export default function Home() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [focusedNodeId, setFocusedNodeId] = useState<string | undefined>();
   const [activeView, setActiveView] = useState<ViewMode>("graph");
 
   const { topics, loading: topicsLoading } = useTopicList();
@@ -68,6 +69,7 @@ export default function Home() {
           <>
             <GraphCanvas
               graphData={graphData}
+              focusedNodeId={focusedNodeId}
               onMenuOpen={() => setSidebarOpen(true)}
               onDetailToggle={() => setDetailOpen((prev) => !prev)}
               onNodeSelect={(node) => {
@@ -80,6 +82,9 @@ export default function Home() {
               node={selectedNode}
               isOpen={detailOpen}
               onClose={() => setDetailOpen(false)}
+              onFocus={() => {
+                if (selectedNode) setFocusedNodeId(selectedNode.id);
+              }}
             />
           </>
         )}
