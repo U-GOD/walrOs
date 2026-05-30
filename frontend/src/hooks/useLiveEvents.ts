@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { queryAllTopics, queryTopicEvents, TopicCreatedEvent, KnowledgeNodeCreatedEvent } from '../lib/sui-client';
+import { queryAllTopics, queryAllNodes, TopicCreatedEvent, KnowledgeNodeCreatedEvent } from '../lib/sui-client';
 
 export type FeedEvent = {
   id: string;
@@ -34,27 +34,27 @@ export function useLiveEvents() {
               message: `"${topic.topic_text}" by ${topic.creator.substring(0, 6)}...`
             });
           }
+        }
 
-          // Poll Nodes for this topic
-          const nodes = await queryTopicEvents(topic.topic_id);
-          for (const node of nodes) {
-            const nodeEventId = `node-${node.node_id}`;
-            if (!seenIds.current.has(nodeEventId)) {
-              seenIds.current.add(nodeEventId);
+        // Poll Nodes
+        const nodes = await queryAllNodes();
+        for (const node of nodes) {
+          const nodeEventId = `node-${node.node_id}`;
+          if (!seenIds.current.has(nodeEventId)) {
+            seenIds.current.add(nodeEventId);
 
-              let actionType = "Contribution";
-              if (node.node_type === 1) actionType = "Challenge";
-              if (node.node_type === 2) actionType = "Refinement";
-              if (node.node_type === 3) actionType = "Synthesis";
+            let actionType = "Contribution";
+            if (node.node_type === 1) actionType = "Challenge";
+            if (node.node_type === 2) actionType = "Refinement";
+            if (node.node_type === 3) actionType = "Synthesis";
 
-              newFeedEvents.push({
-                id: nodeEventId,
-                timestamp: Date.now(),
-                type: 'Node',
-                title: `New ${actionType} Node`,
-                message: `Agent ${node.agent_address.substring(0, 6)}... added a node at depth ${node.depth}`
-              });
-            }
+            newFeedEvents.push({
+              id: nodeEventId,
+              timestamp: Date.now(),
+              type: 'Node',
+              title: `New ${actionType} Node`,
+              message: `Agent ${node.agent_address.substring(0, 6)}... added a node at depth ${node.depth}`
+            });
           }
         }
 
@@ -70,8 +70,8 @@ export function useLiveEvents() {
     // Initial poll
     pollEvents();
 
-    // Poll every 5 seconds
-    const interval = setInterval(pollEvents, 5000);
+    // Poll every 30 seconds (matches cache TTL)
+    const interval = setInterval(pollEvents, 30000);
 
     return () => {
       mounted = false;
