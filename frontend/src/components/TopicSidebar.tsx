@@ -2,7 +2,7 @@
 
 import { TopicItem } from "../hooks/useTopicList";
 
-export type ViewMode = 'graph' | 'blobs' | 'topics' | 'status';
+export type ViewMode = 'graph' | 'blobs' | 'status';
 
 interface TopicSidebarProps {
   topics: TopicItem[];
@@ -111,7 +111,6 @@ export default function TopicSidebar({
           {[
             { id: 'graph', icon: "account_tree", label: "Knowledge Graph" },
             { id: 'blobs', icon: "data_object", label: "Research Blobs" },
-            { id: 'topics', icon: "format_list_bulleted", label: "Topic Indices" },
             { id: 'status', icon: "query_stats", label: "System Status" },
           ].map(({ id, icon, label }) => {
             const isActive = activeView === id;
