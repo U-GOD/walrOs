@@ -8,6 +8,7 @@ export interface GraphNode extends d3.SimulationNodeDatum {
   agentAddress: string;
   modelName: string;
   depth: number;
+  label?: string;
 }
 
 export interface GraphLink extends d3.SimulationLinkDatum<GraphNode> {
@@ -21,7 +22,7 @@ export interface GraphData {
   links: GraphLink[];
 }
 
-export function transformEventsToGraph(events: KnowledgeNodeCreatedEvent[]): GraphData {
+export function transformEventsToGraph(events: KnowledgeNodeCreatedEvent[], topicText?: string): GraphData {
   const nodes: GraphNode[] = [];
   const links: GraphLink[] = [];
   const nodeMap = new Set<string>();
@@ -38,6 +39,7 @@ export function transformEventsToGraph(events: KnowledgeNodeCreatedEvent[]): Gra
         agentAddress: event.agent_address,
         modelName: event.model_name,
         depth: event.depth,
+        label: event.depth === 0 ? topicText : undefined,
       });
       nodeMap.add(event.node_id);
     }
