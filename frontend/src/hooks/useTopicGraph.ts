@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { queryTopicEvents } from '../lib/sui-client';
 import { transformEventsToGraph, GraphData } from '../lib/graph-helpers';
 
-export function useTopicGraph(topicId: string | null) {
+export function useTopicGraph(topicId: string | null, topicText?: string) {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -18,7 +18,7 @@ export function useTopicGraph(topicId: string | null) {
       try {
         setLoading(true);
         const events = await queryTopicEvents(topicId!);
-        const data = transformEventsToGraph(events);
+        const data = transformEventsToGraph(events, topicText);
         if (mounted) {
           setGraphData(data);
           setLoading(false);
@@ -32,7 +32,7 @@ export function useTopicGraph(topicId: string | null) {
     }
     loadGraph();
     return () => { mounted = false; };
-  }, [topicId]);
+  }, [topicId, topicText]);
 
   return { graphData, loading, error };
 }
