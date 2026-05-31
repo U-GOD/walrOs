@@ -8,7 +8,6 @@ import NodeDetailPanel from "@/components/NodeDetailPanel";
 import ActivityFeed from "@/components/ActivityFeed";
 import SettingsModal from "@/components/SettingsModal";
 import BlobsListView from "@/components/BlobsListView";
-import TopicsListView from "@/components/TopicsListView";
 import SystemStatusView from "@/components/SystemStatusView";
 import { useTopicGraph } from "@/hooks/useTopicGraph";
 import { useTopicList } from "@/hooks/useTopicList";
@@ -93,18 +92,9 @@ export default function Home() {
         )}
 
         {activeView === "blobs" && (
-          <BlobsListView />
+          <BlobsListView topics={topics} />
         )}
 
-        {activeView === "topics" && (
-          <TopicsListView 
-            topics={topics} 
-            onTopicSelect={(id) => {
-              setSelectedTopicId(id);
-              setActiveView("graph");
-            }}
-          />
-        )}
 
         {activeView === "status" && (
           <SystemStatusView />
