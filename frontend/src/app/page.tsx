@@ -25,7 +25,8 @@ export default function Home() {
   const [activeView, setActiveView] = useState<ViewMode>("graph");
 
   const { topics, loading: topicsLoading } = useTopicList();
-  const { graphData, loading: graphLoading } = useTopicGraph(selectedTopicId);
+  const selectedTopic = topics.find(t => t.id === selectedTopicId);
+  const { graphData, loading: graphLoading } = useTopicGraph(selectedTopicId, selectedTopic?.label);
 
   // Auto-select the first topic when topics load, if none is selected
   useEffect(() => {
