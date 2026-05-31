@@ -3,13 +3,13 @@
 import { useState } from "react";
 
 export default function GraphLegend() {
-  const [minimized, setMinimized] = useState(false);
+  const [minimized, setMinimized] = useState(true);
 
   if (minimized) {
     return (
       <button
         onClick={() => setMinimized(false)}
-        className="absolute top-md left-md z-30 bg-surface-bright border border-hairline p-2 rounded-full shadow-lg text-primary hover:bg-surface-container transition-cubic control-btn"
+        className="absolute bottom-20 left-md z-30 bg-surface-bright border border-hairline p-2 rounded-full shadow-lg text-primary hover:bg-surface-container transition-cubic control-btn"
         title="Show Legend"
       >
         <span className="material-symbols-outlined text-[20px]">legend_toggle</span>
@@ -18,7 +18,7 @@ export default function GraphLegend() {
   }
 
   return (
-    <div className="absolute top-md left-md z-30 bg-surface-bright border border-hairline rounded-xl shadow-lg p-sm w-48 transition-cubic flex flex-col gap-sm">
+    <div className="absolute bottom-20 left-md z-30 bg-surface-bright border border-hairline rounded-xl shadow-lg p-sm w-48 transition-cubic flex flex-col gap-sm">
       <div className="flex items-center justify-between px-1 mb-1">
         <span className="font-label-sm uppercase tracking-widest text-outline">Legend</span>
         <button
