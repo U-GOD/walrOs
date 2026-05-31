@@ -168,8 +168,8 @@ export default function NodeDetailPanel({ node, isOpen, onClose, onFocus }: Node
                 </div>
               )}
               {error && (
-                <div className="text-red-500 font-label-md">
-                  Failed to load blob: {error.message}
+                <div className="text-on-surface-variant italic font-label-md text-label-md">
+                  Content stored on Walrus (testnet blob may have expired)
                 </div>
               )}
               {!loading && !error && !content && node.depth === 0 && (
@@ -188,14 +188,20 @@ export default function NodeDetailPanel({ node, isOpen, onClose, onFocus }: Node
           {/* Action Buttons */}
           <div className="flex flex-col gap-sm mt-auto pt-md border-t border-hairline">
             <button
-              className="w-full bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest py-3 border border-primary hover:bg-[#222222] transition-cubic disabled:opacity-50"
+              className="w-full bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest py-3 border border-primary hover:bg-[#222222] transition-cubic"
+              onClick={() => window.open(`https://suiscan.xyz/testnet/object/${node.id}`, "_blank")}
+            >
+              View on Sui Explorer
+            </button>
+            <button
+              className="w-full bg-surface-container text-primary font-label-md text-label-md uppercase tracking-widest py-3 border-hairline hover:bg-surface-container-low transition-cubic disabled:opacity-50 border"
               disabled={!node.blobId}
               onClick={() => window.open(`https://aggregator.walrus-testnet.walrus.space/v1/blobs/${node.blobId}`, "_blank")}
             >
               View on Walrus Explorer
             </button>
             <button 
-              className="w-full bg-white text-primary font-label-md text-label-md uppercase tracking-widest py-3 border-hairline hover:bg-surface-container-low transition-cubic"
+              className="w-full bg-surface-container text-primary font-label-md text-label-md uppercase tracking-widest py-3 border-hairline hover:bg-surface-container-low transition-cubic border"
               onClick={onFocus}
             >
               Focus Node in Graph
