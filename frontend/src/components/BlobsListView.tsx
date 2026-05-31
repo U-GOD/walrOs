@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { queryAllNodes, KnowledgeNodeCreatedEvent } from "../lib/sui-client";
 import { WALRUS_AGGREGATOR_URL } from "../lib/constants";
 import { useWalrusBlob } from "../hooks/useWalrusBlob";
+import { TopicItem } from "../hooks/useTopicList";
 
-function BlobRow({ node }: { node: KnowledgeNodeCreatedEvent }) {
+function BlobRow({ node, topic }: { node: KnowledgeNodeCreatedEvent, topic?: TopicItem }) {
   const [expanded, setExpanded] = useState(false);
   const { content, loading, error } = useWalrusBlob(expanded ? node.blob_id : null);
 
@@ -38,6 +39,9 @@ function BlobRow({ node }: { node: KnowledgeNodeCreatedEvent }) {
         <td className="p-3 text-sm text-on-surface-variant font-medium">
           {getNodeTypeStr(node.node_type, node.depth)}
         </td>
+        <td className="p-3 text-sm text-on-surface-variant">
+          {topic?.label || "Unknown Topic"}
+        </td>
         <td className="p-3 text-sm text-on-surface-variant font-mono">
           {node.agent_address.substring(0, 8)}...
         </td>
@@ -54,10 +58,19 @@ function BlobRow({ node }: { node: KnowledgeNodeCreatedEvent }) {
                 <button
                   onClick={() => copyToClipboard(node.blob_id)}
                   title="Copy Blob ID"
-                  className="p-1 text-outline hover:text-primary transition-cubic bg-surface rounded"
+                  className="p-1 text-outline hover:text-primary transition-cubic bg-surface rounded flex items-center"
                 >
                   <span className="material-symbols-outlined text-[16px]">content_copy</span>
                 </button>
+                <a
+                  href={`https://suiscan.xyz/testnet/object/${node.node_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="View Node on Sui Explorer"
+                  className="p-1 text-outline hover:text-primary transition-cubic bg-surface rounded flex items-center"
+                >
+                  <span className="material-symbols-outlined text-[16px]">explore</span>
+                </a>
                 <a
                   href={`${WALRUS_AGGREGATOR_URL}/v1/blobs/${node.blob_id}`}
                   target="_blank"
@@ -86,8 +99,9 @@ function BlobRow({ node }: { node: KnowledgeNodeCreatedEvent }) {
                   </div>
                 )}
                 {error && (
-                  <div className="text-red-500 font-label-md">
-                    Failed to load blob: {error.message}
+                  <div className="text-on-surface-variant font-label-md bg-red-50/50 p-3 rounded border border-red-100 flex items-start gap-2">
+                    <span className="material-symbols-outlined text-red-400 text-lg">error</span>
+                    <span>{error.message}</span>
                   </div>
                 )}
                 {!loading && !error && !content && !node.blob_id && (
@@ -109,7 +123,7 @@ function BlobRow({ node }: { node: KnowledgeNodeCreatedEvent }) {
   );
 }
 
-export default function BlobsListView() {
+export default function BlobsListView({ topics }: { topics: TopicItem[] }) {
   const [nodes, setNodes] = useState<KnowledgeNodeCreatedEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -154,24 +168,25 @@ export default function BlobsListView() {
             <table className="w-full text-left border-collapse">
               <thead className="bg-surface-container-low border-b border-hairline">
                 <tr>
-                  <th className="p-3 font-label-sm uppercase tracking-widest text-outline w-[20%]">Blob ID</th>
-                  <th className="p-3 font-label-sm uppercase tracking-widest text-outline w-[15%]">Node Type</th>
+                  <th className="p-3 font-label-sm uppercase tracking-widest text-outline w-[15%]">Blob ID</th>
+                  <th className="p-3 font-label-sm uppercase tracking-widest text-outline w-[10%]">Node Type</th>
+                  <th className="p-3 font-label-sm uppercase tracking-widest text-outline w-[25%]">Topic</th>
                   <th className="p-3 font-label-sm uppercase tracking-widest text-outline w-[15%]">Agent Address</th>
-                  <th className="p-3 font-label-sm uppercase tracking-widest text-outline w-[20%]">Model</th>
-                  <th className="p-3 font-label-sm uppercase tracking-widest text-outline w-[10%]">Depth</th>
-                  <th className="p-3 font-label-sm uppercase tracking-widest text-outline w-[20%] text-right">Actions</th>
+                  <th className="p-3 font-label-sm uppercase tracking-widest text-outline w-[15%]">Model</th>
+                  <th className="p-3 font-label-sm uppercase tracking-widest text-outline w-[5%]">Depth</th>
+                  <th className="p-3 font-label-sm uppercase tracking-widest text-outline w-[15%] text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {nodes.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-on-surface-variant font-label-md">
+                    <td colSpan={7} className="p-8 text-center text-on-surface-variant font-label-md">
                       No nodes found on the network.
                     </td>
                   </tr>
                 ) : (
                   nodes.map((node) => (
-                    <BlobRow key={node.node_id} node={node} />
+                    <BlobRow key={node.node_id} node={node} topic={topics.find(t => t.id === node.topic_id)} />
                   ))
                 )}
               </tbody>
