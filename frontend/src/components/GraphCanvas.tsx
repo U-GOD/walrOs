@@ -90,21 +90,58 @@ export default function GraphCanvas({
     const link = g
       .append("g")
       .attr("stroke-opacity", 1)
-      .selectAll("line")
+      .selectAll("g")
       .data(links)
-      .join("line")
+      .join("g")
+      .attr("class", "link-group");
+
+    const linkPath = link
+      .append("line")
       .attr("stroke", (d) => markerColors[d.relationship as keyof typeof markerColors])
       .attr("stroke-width", 2)
       .attr("stroke-dasharray", (d) => (d.relationship === 1 ? "5,5" : "none"))
       .attr("marker-end", (d) => `url(#arrow-${d.relationship})`);
 
+    const linkLabel = link
+      .append("text")
+      .attr("fill", (d) => markerColors[d.relationship as keyof typeof markerColors])
+      .attr("font-size", "10px")
+      .attr("font-family", "monospace")
+      .attr("text-anchor", "middle")
+      .attr("dy", -6)
+      .text((d) => {
+        if (d.relationship === 1) return "challenges";
+        if (d.relationship === 2) return "refines";
+        if (d.relationship === 3) return "synthesizes";
+        return "";
+      });
+
     // Draw Nodes
     const node = g
       .append("g")
-      .selectAll("circle")
+      .selectAll("g")
       .data(nodes)
-      .join("circle")
-      .attr("r", (d) => (d.depth === 0 ? 20 : 16))
+      .join("g")
+      .attr("class", "node-group cursor-pointer")
+      .on("click", (event, d) => {
+        onNodeSelect(d);
+        onDetailToggle();
+      })
+      .call(
+        (d3.drag<SVGGElement, GraphNode>()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended)) as any
+      );
+
+    const getRadius = (d: GraphNode) => {
+      if (d.depth === 0) return 40;
+      if (d.nodeType === 3) return 24;
+      return 16;
+    };
+
+    node.append("circle")
+      .attr("r", getRadius)
       .attr("fill", (d) => {
         if (d.depth === 0) return "#1e293b"; // Root
         if (d.nodeType === 0) return "#2563eb"; // Contribution
@@ -113,20 +150,38 @@ export default function GraphCanvas({
         if (d.nodeType === 3) return "#16a34a"; // Synthesis
         return "#999999";
       })
-      .attr("stroke", "#ffffff")
-      .attr("stroke-width", 2)
-      .attr("cursor", "pointer")
-      .attr("class", "transition-cubic hover:shadow-md")
-      .on("click", (event, d) => {
-        onNodeSelect(d);
-        onDetailToggle();
+      .attr("stroke", (d) => d.id === focusedNodeId ? "#fbbf24" : "#ffffff")
+      .attr("stroke-width", (d) => d.id === focusedNodeId ? 4 : 2)
+      .attr("class", "transition-all duration-300 hover:shadow-lg");
+
+    // Node Type / Label
+    node.append("text")
+      .attr("dy", (d) => getRadius(d) + 16)
+      .attr("text-anchor", "middle")
+      .attr("fill", "#334155")
+      .attr("font-size", "12px")
+      .attr("font-weight", "600")
+      .text((d) => {
+        if (d.depth === 0) return d.label || "Topic Root";
+        if (d.nodeType === 0) return "Contribution";
+        if (d.nodeType === 1) return "Challenge";
+        if (d.nodeType === 2) return "Refinement";
+        if (d.nodeType === 3) return "Synthesis";
+        return "Unknown";
       })
-      .call(
-        (d3.drag<SVGCircleElement, GraphNode>()
-          .on("start", dragstarted)
-          .on("drag", dragged)
-          .on("end", dragended)) as any
-      );
+      .each(function(d) {
+        if (d.depth === 0 && d.label && d.label.length > 30) {
+          d3.select(this).text(d.label.substring(0, 30) + "...");
+        }
+      });
+
+    // Model Name
+    node.append("text")
+      .attr("dy", (d) => getRadius(d) + 28)
+      .attr("text-anchor", "middle")
+      .attr("fill", "#64748b")
+      .attr("font-size", "10px")
+      .text((d) => d.depth === 0 ? "" : d.modelName || "N/A");
 
     // Node tooltips
     node.append("title").text((d) => {
@@ -139,13 +194,30 @@ export default function GraphCanvas({
     });
 
     simulation.on("tick", () => {
-      link
+      linkPath
         .attr("x1", (d) => (d.source as GraphNode).x!)
         .attr("y1", (d) => (d.source as GraphNode).y!)
         .attr("x2", (d) => (d.target as GraphNode).x!)
         .attr("y2", (d) => (d.target as GraphNode).y!);
 
-      node.attr("cx", (d) => d.x!).attr("cy", (d) => d.y!);
+      linkLabel
+        .attr("x", (d) => ((d.source as GraphNode).x! + (d.target as GraphNode).x!) / 2)
+        .attr("y", (d) => ((d.source as GraphNode).y! + (d.target as GraphNode).y!) / 2)
+        .attr("transform", function(d) {
+           const sx = (d.source as GraphNode).x!;
+           const sy = (d.source as GraphNode).y!;
+           const tx = (d.target as GraphNode).x!;
+           const ty = (d.target as GraphNode).y!;
+           const cx = (sx + tx) / 2;
+           const cy = (sy + ty) / 2;
+           let angle = Math.atan2(ty - sy, tx - sx) * 180 / Math.PI;
+           if (angle > 90 || angle < -90) {
+              angle += 180;
+           }
+           return `rotate(${angle}, ${cx}, ${cy})`;
+        });
+
+      node.attr("transform", (d) => `translate(${d.x},${d.y})`);
     });
 
     // Drag functions
