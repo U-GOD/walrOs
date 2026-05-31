@@ -2,9 +2,10 @@ interface HeaderProps {
   topicCount: number;
   blobCount: number;
   onSettingsClick: () => void;
+  onActivityClick: () => void;
 }
 
-export default function Header({ topicCount, blobCount, onSettingsClick }: HeaderProps) {
+export default function Header({ topicCount, blobCount, onSettingsClick, onActivityClick }: HeaderProps) {
   return (
     <header className="bg-surface/95 backdrop-blur-md text-primary font-headline-sm text-headline-sm tracking-tight fixed top-0 w-full h-[56px] z-50 border-hairline-b transition-cubic flex items-center justify-between px-margin-desktop">
       {/* Left: Wordmark + Network Badge */}
@@ -35,8 +36,14 @@ export default function Header({ topicCount, blobCount, onSettingsClick }: Heade
         </div>
       </div>
 
-      {/* Right: Settings Icon */}
+      {/* Right: Activity & Settings */}
       <div className="flex items-center gap-md">
+        <button
+          onClick={onActivityClick}
+          className="material-symbols-outlined text-on-surface-variant hover:text-secondary transition-cubic cursor-pointer active:opacity-70 bg-transparent border-none p-0 flex items-center justify-center"
+        >
+          notifications
+        </button>
         <button
           onClick={onSettingsClick}
           className="material-symbols-outlined text-on-surface-variant hover:text-secondary transition-cubic cursor-pointer active:opacity-70 bg-transparent border-none p-0 flex items-center justify-center"
