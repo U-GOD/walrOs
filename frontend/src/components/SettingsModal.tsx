@@ -1,7 +1,6 @@
 "use client";
 
 import { PACKAGE_ID, SUI_RPC_URL, WALRUS_AGGREGATOR_URL } from "../lib/constants";
-import { useState } from "react";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -9,8 +8,6 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const [pollingInterval, setPollingInterval] = useState(5);
-
   if (!isOpen) return null;
 
   const copyToClipboard = (text: string) => {
@@ -77,34 +74,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
           </section>
 
-          {/* Sync Preferences */}
-          <section>
-            <h3 className="font-label-sm text-label-sm uppercase tracking-widest text-outline mb-md font-label-md">
-              Sync Preferences
-            </h3>
-            <div className="flex flex-col gap-xs">
-              <span className="font-label-sm text-label-sm text-on-surface-variant font-label-md">
-                Data Polling Interval (Seconds)
-              </span>
-              <div className="flex items-center gap-sm">
-                {[3, 5, 10, 15].map((val) => (
-                  <button
-                    key={val}
-                    onClick={() => setPollingInterval(val)}
-                    className={`
-                      flex-1 py-2 font-label-md text-label-md rounded border transition-cubic
-                      ${pollingInterval === val ? 'bg-primary text-on-primary border-primary' : 'bg-transparent border-hairline text-primary hover:bg-surface-container-low'}
-                    `}
-                  >
-                    {val}s
-                  </button>
-                ))}
-              </div>
-              <p className="font-body-md text-[11px] text-outline mt-1 leading-snug">
-                Determines how often the UI fetches new events from the Sui network. Note: Very low intervals might rate-limit public RPCs.
-              </p>
-            </div>
-          </section>
 
           {/* About */}
           <section>
