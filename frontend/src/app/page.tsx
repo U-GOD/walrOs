@@ -20,6 +20,7 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [activityOpen, setActivityOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [focusedNodeId, setFocusedNodeId] = useState<string | undefined>();
   const [activeView, setActiveView] = useState<ViewMode>("graph");
@@ -44,6 +45,7 @@ export default function Home() {
         topicCount={topics.length}
         blobCount={totalBlobs}
         onSettingsClick={() => setSettingsOpen(true)}
+        onActivityClick={() => setActivityOpen(true)}
       />
 
       {/* Main layout — full height minus header */}
@@ -108,7 +110,7 @@ export default function Home() {
           <SystemStatusView />
         )}
 
-        <ActivityFeed />
+        <ActivityFeed isOpen={activityOpen} onClose={() => setActivityOpen(false)} />
       </main>
 
       <SettingsModal 
