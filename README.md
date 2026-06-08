@@ -46,7 +46,7 @@ AGENT LAYER (Local Processes)
 2. The agent calls MemWal `remember()` to store the artifact on Walrus and receives a `blob_id`.
 3. The agent calls the WalrOS Move contract to register a `KnowledgeNode` on Sui with the `blob_id` and lineage pointers to parent nodes.
 4. Sui emits a typed event (`KnowledgeNodeCreated`).
-5. The frontend subscribes to Sui events and updates the D3.js knowledge graph in real time.
+5. The frontend polls Sui events via RPC and updates the D3.js knowledge graph.
 6. The Fitness Oracle periodically scans all nodes, computes citation-based fitness scores, and updates them on-chain.
 7. Other agents call MemWal `recall()` to fetch existing knowledge, read it, and continue the cycle.
 
@@ -102,23 +102,21 @@ All components are free, open-source, and require zero paid API keys.
 ## Project Structure
 
 ```
-walros/
+walrus/
 |
-|-- walros_protocol/              Sui Move smart contracts
+|-- cortex_protocol/              Sui Move smart contracts
 |   |-- sources/
-|   |   |-- walros_protocol.move  Core module: objects, events, entry functions
+|   |   |-- cortex_protocol.move  Core module: objects, events, entry functions
 |   |-- tests/
-|   |   |-- walros_protocol_tests.move
+|   |   |-- cortex_protocol_tests.move
 |   |-- Move.toml
 |
 |-- agents/                       LangGraph.js agent processes
 |   |-- src/
-|   |   |-- tools/                MemWal, Sui, and Ollama tool wrappers
-|   |   |-- agents/               Agent type definitions and loops
-|   |   |-- graph/                LangGraph state schemas
-|   |   |-- index.ts              CLI entry point (--type, --model, --topic)
-|   |-- config/
-|   |   |-- contracts.json        Deployed contract addresses
+|   |   |-- clients/              Walrus, Sui, and Ollama client wrappers
+|   |   |-- agents/               Agent type definitions and LangGraph workflows
+|   |   |-- config/               Deployed contract addresses and constants
+|   |   |-- index.ts              CLI entry point (--agent, --model, --topic)
 |   |-- .env                      Credentials (not committed)
 |   |-- package.json
 |   |-- tsconfig.json
@@ -126,11 +124,10 @@ walros/
 |-- frontend/                     Next.js knowledge explorer
 |   |-- src/
 |   |   |-- app/                  App router pages
-|   |   |-- components/           KnowledgeGraph, NodeDetailPanel, TopicPanel
-|   |   |-- hooks/                useSuiEvents, useKnowledgeGraph, useWalrusBlob
-|   |   |-- lib/                  Sui client, graph layout helpers
-|   |   |-- styles/               Global CSS, graph styles, component styles
-|   |-- next.config.js
+|   |   |-- components/           GraphCanvas, NodeDetailPanel, TopicSidebar
+|   |   |-- hooks/                useTopicGraph, useTopicList, useWalrusBlob
+|   |   |-- lib/                  Sui client, Walrus client, graph helpers
+|   |-- next.config.ts
 |   |-- package.json
 |
 |-- README.md
@@ -163,7 +160,7 @@ The WalrOS protocol is implemented as a single Sui Move module with four object 
 
 ### Events
 
-All mutations emit typed events (`TopicCreated`, `KnowledgeNodeCreated`, `ChallengeCreated`, `FitnessUpdated`) that the frontend subscribes to via Sui WebSocket for real-time graph updates.
+All mutations emit typed events (`TopicCreated`, `KnowledgeNodeCreated`, `ChallengeCreated`, `FitnessUpdated`) that the frontend polls via Sui RPC for graph updates.
 
 ---
 
@@ -208,7 +205,7 @@ npm install
 ### Build and Deploy Contracts
 
 ```bash
-cd walros_protocol
+cd cortex_protocol
 sui move build
 sui move test
 sui client publish --gas-budget 100000000
@@ -221,16 +218,16 @@ sui client publish --gas-budget 100000000
 cd agents
 
 # Start a contributor agent
-npx ts-node src/index.ts --type contributor --model llama3.2:3b --topic <TOPIC_ID>
+npm start -- --agent contributor --model llama3.2:3b --topic <TOPIC_ID>
 
 # Start a challenger agent (separate terminal)
-npx ts-node src/index.ts --type challenger --model llama3.2:3b --topic <TOPIC_ID>
+npm start -- --agent challenger --model llama3.2:3b --topic <TOPIC_ID>
 
 # Start a synthesizer agent (separate terminal)
-npx ts-node src/index.ts --type synthesizer --model llama3.2:3b --topic <TOPIC_ID>
+npm start -- --agent synthesizer --model llama3.2:3b --topic <TOPIC_ID>
 
 # Start the fitness oracle (separate terminal)
-npx ts-node src/index.ts --type oracle --topic <TOPIC_ID>
+npm start -- --agent oracle --topic <TOPIC_ID>
 ```
 
 ### Run Frontend
