@@ -2,6 +2,7 @@ import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
 import { queryTopicNodes, refine } from "../clients/sui-client.js";
 import { storeBlob, retrieveBlob } from "../clients/walrus-client.js";
 import { generate } from "../clients/ollama-client.js";
+import { recallKnowledge } from "../clients/memwal-client.js";
 
 const SynthesizerState = Annotation.Root({
     topicId: Annotation<string>(),
@@ -49,8 +50,17 @@ async function loadTopic(state: typeof SynthesizerState.State) {
     try {
         contributionContent = await retrieveBlob(targetContribution.blob_id);
         challengeContent = await retrieveBlob(targetChallenge.blob_id);
+
+        console.log("Recalling MemWal context for synthesizer...");
+        const recalledMemories = await recallKnowledge("context for synthesis " + state.topicId, 3, state.topicId);
+        if (recalledMemories && recalledMemories.length > 0) {
+            challengeContent += `\n\n--- MemWal Recalled Context ---\n`;
+            for (const memory of recalledMemories) {
+                challengeContent += `- ${memory.text}\n`;
+            }
+        }
     } catch (e) {
-        console.error("Failed to retrieve blobs for synthesis", e);
+        console.error("Failed to retrieve blobs or MemWal context for synthesis", e);
         throw e;
     }
 
