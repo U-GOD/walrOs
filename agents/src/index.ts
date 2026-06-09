@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { runContributor } from './agents/contributor.js';
 import { runChallenger } from './agents/challenger.js';
 import { runSynthesizer } from './agents/synthesizer.js';
+import { runOracle } from './agents/oracle.js';
 import { createTopic } from './clients/sui-client.js';
 
 async function main() {
@@ -72,7 +73,7 @@ Example:
                 await runSynthesizer(topicId, model);
                 break;
             case 'oracle':
-                console.log("Oracle agent is not implemented yet.");
+                await runOracle(topicId);
                 break;
             default:
                 console.error(`Unknown agent type: ${agentType}`);
