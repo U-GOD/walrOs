@@ -23,7 +23,7 @@ const NODE_COLORS: Record<string, string> = {
 };
 
 const EDGE_COLORS: Record<number, string> = {
-  0: "#cbd5e1",
+  0: "#94a3b8",
   1: "#dc2626",
   2: "#0d9488",
   3: "#16a34a",
@@ -39,13 +39,13 @@ function getNodeColor(d: GraphNode): string {
 }
 
 function getNodeRadius(d: GraphNode): number {
-  if (d.depth === 0) return 28;
-  if (d.nodeType === 3) return 18;
-  return 14;
+  if (d.depth === 0) return 32;
+  if (d.nodeType === 3) return 20;
+  return 16;
 }
 
 function getNodeTypeLabel(d: GraphNode): string {
-  if (d.depth === 0) return d.label ? (d.label.length > 28 ? d.label.substring(0, 28) + "..." : d.label) : "Topic Root";
+  if (d.depth === 0) return d.label ? (d.label.length > 24 ? d.label.substring(0, 24) + "..." : d.label) : "Topic Root";
   if (d.nodeType === 0) return "Contribution";
   if (d.nodeType === 1) return "Challenge";
   if (d.nodeType === 2) return "Refinement";
@@ -58,6 +58,39 @@ function getEdgeLabel(rel: number): string {
   if (rel === 2) return "refines";
   if (rel === 3) return "synthesizes";
   return "";
+}
+
+/**
+ * Build a curved path between two nodes using a quadratic bezier.
+ * Offsets the curve perpendicular to the line to avoid edge overlap.
+ */
+function buildCurvedPath(
+  sx: number, sy: number,
+  tx: number, ty: number,
+  targetRadius: number,
+  curvature: number = 0
+): string {
+  const dx = tx - sx;
+  const dy = ty - sy;
+  const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+  // Shorten the line to stop at the target node edge
+  const endX = tx - (dx / dist) * targetRadius;
+  const endY = ty - (dy / dist) * targetRadius;
+
+  if (curvature === 0) {
+    return `M${sx},${sy} L${endX},${endY}`;
+  }
+
+  // Perpendicular offset for the control point
+  const mx = (sx + endX) / 2;
+  const my = (sy + endY) / 2;
+  const nx = -(endY - sy) / dist;
+  const ny = (endX - sx) / dist;
+  const cx = mx + nx * curvature;
+  const cy = my + ny * curvature;
+
+  return `M${sx},${sy} Q${cx},${cy} ${endX},${endY}`;
 }
 
 export default function GraphCanvas({
@@ -96,7 +129,7 @@ export default function GraphCanvas({
 
     const g = svg.append("g");
 
-    // Arrow markers scaled per relationship
+    // Arrow markers
     const defs = svg.append("defs");
     Object.entries(EDGE_COLORS).forEach(([rel, color]) => {
       defs.append("marker")
@@ -104,20 +137,55 @@ export default function GraphCanvas({
         .attr("viewBox", "0 -5 10 10")
         .attr("refX", 10)
         .attr("refY", 0)
-        .attr("markerWidth", 8)
-        .attr("markerHeight", 8)
+        .attr("markerWidth", 7)
+        .attr("markerHeight", 7)
         .attr("orient", "auto")
         .append("path")
         .attr("fill", color)
         .attr("d", "M0,-4L10,0L0,4");
     });
 
+    // Drop shadow for nodes
+    const filter = defs.append("filter")
+      .attr("id", "node-shadow")
+      .attr("x", "-50%").attr("y", "-50%")
+      .attr("width", "200%").attr("height", "200%");
+    filter.append("feDropShadow")
+      .attr("dx", 0).attr("dy", 2)
+      .attr("stdDeviation", 4)
+      .attr("flood-color", "#000")
+      .attr("flood-opacity", 0.12);
+
     const nodes = graphData.nodes.map((d) => ({ ...d }));
     const links = graphData.links.map((d) => ({ ...d }));
 
     if (nodes.length === 0) return;
 
-    // Pre-position: place root at center, others radially by depth
+    // Detect duplicate edges between same source-target pair to apply curvature
+    const edgePairCount: Record<string, number> = {};
+    const edgePairIndex: number[] = [];
+    for (const link of links) {
+      const s = typeof link.source === "string" ? link.source : link.source.id;
+      const t = typeof link.target === "string" ? link.target : link.target.id;
+      const key = [s, t].sort().join("-");
+      edgePairCount[key] = (edgePairCount[key] || 0) + 1;
+    }
+    const edgePairSeen: Record<string, number> = {};
+    for (const link of links) {
+      const s = typeof link.source === "string" ? link.source : link.source.id;
+      const t = typeof link.target === "string" ? link.target : link.target.id;
+      const key = [s, t].sort().join("-");
+      edgePairSeen[key] = (edgePairSeen[key] || 0) + 1;
+      const total = edgePairCount[key];
+      if (total <= 1) {
+        edgePairIndex.push(0);
+      } else {
+        const idx = edgePairSeen[key];
+        edgePairIndex.push((idx % 2 === 0 ? 1 : -1) * Math.ceil(idx / 2) * 40);
+      }
+    }
+
+    // Pin root at center
     const rootNode = nodes.find(n => n.depth === 0);
     if (rootNode) {
       rootNode.x = width / 2;
@@ -126,49 +194,59 @@ export default function GraphCanvas({
       rootNode.fy = height / 2;
     }
 
+    // Find max depth for radial scaling
+    const maxDepth = Math.max(...nodes.map(n => n.depth), 1);
+    const radialStep = Math.min(200, Math.min(width, height) / (maxDepth + 2));
+
     const simulation = d3
       .forceSimulation<GraphNode>(nodes)
       .force(
         "link",
         d3.forceLink<GraphNode, GraphLink>(links)
           .id((d) => d.id)
-          .distance(180)
-          .strength(0.8)
+          .distance((d) => {
+            const src = d.source as GraphNode;
+            const tgt = d.target as GraphNode;
+            return 120 + Math.abs(src.depth - tgt.depth) * 60;
+          })
+          .strength(0.5)
       )
-      .force("charge", d3.forceManyBody().strength(-800))
-      .force("center", d3.forceCenter(width / 2, height / 2).strength(0.05))
-      .force("collide", d3.forceCollide<GraphNode>().radius((d) => getNodeRadius(d) + 50))
-      .force("radial", d3.forceRadial<GraphNode>((d) => d.depth * 160, width / 2, height / 2).strength(0.3));
+      .force("charge", d3.forceManyBody().strength(-1200))
+      .force("center", d3.forceCenter(width / 2, height / 2).strength(0.03))
+      .force("collide", d3.forceCollide<GraphNode>().radius((d) => getNodeRadius(d) + 40).strength(0.8))
+      .force("radial", d3.forceRadial<GraphNode>((d) => d.depth * radialStep, width / 2, height / 2).strength(0.6));
 
-    // Draw edges
+    // Draw edges as paths (for curves)
     const linkGroup = g.append("g").attr("class", "links");
-
-    const linkLine = linkGroup
-      .selectAll("line")
+    const linkPath = linkGroup
+      .selectAll("path")
       .data(links)
-      .join("line")
-      .attr("stroke", (d) => EDGE_COLORS[d.relationship as keyof typeof EDGE_COLORS] || "#cbd5e1")
+      .join("path")
+      .attr("fill", "none")
+      .attr("stroke", (d) => EDGE_COLORS[d.relationship as keyof typeof EDGE_COLORS] || "#94a3b8")
       .attr("stroke-width", (d) => d.relationship === 0 ? 1.5 : 2)
       .attr("stroke-dasharray", (d) => (d.relationship === 1 ? "6,4" : "none"))
-      .attr("stroke-opacity", 0.7)
+      .attr("stroke-opacity", 0.55)
       .attr("marker-end", (d) => `url(#arrow-${d.relationship})`);
 
+    // Edge labels
     const edgeLabelGroup = g.append("g").attr("class", "edge-labels");
     const edgeLabel = edgeLabelGroup
       .selectAll("text")
       .data(links.filter(d => d.relationship !== 0))
       .join("text")
       .attr("fill", (d) => EDGE_COLORS[d.relationship as keyof typeof EDGE_COLORS] || "#94a3b8")
-      .attr("font-size", "9px")
+      .attr("font-size", "8px")
       .attr("font-family", "'Inter', sans-serif")
+      .attr("font-weight", "500")
       .attr("text-anchor", "middle")
-      .attr("dy", -8)
-      .attr("opacity", 0.8)
+      .attr("dy", -6)
+      .attr("opacity", 0.6)
+      .attr("pointer-events", "none")
       .text((d) => getEdgeLabel(d.relationship));
 
     // Draw nodes
     const nodeGroup = g.append("g").attr("class", "nodes");
-
     const node = nodeGroup
       .selectAll<SVGGElement, GraphNode>("g")
       .data(nodes)
@@ -199,79 +277,88 @@ export default function GraphCanvas({
           }) as any
       );
 
-    // Outer glow ring on hover
+    // Outer glow ring
     node.append("circle")
       .attr("r", (d) => getNodeRadius(d) + 6)
       .attr("fill", "none")
       .attr("stroke", (d) => getNodeColor(d))
       .attr("stroke-width", 0)
-      .attr("stroke-opacity", 0.2)
+      .attr("stroke-opacity", 0.25)
       .attr("class", "hover-ring");
 
-    // Main circle
+    // Main circle with shadow
     node.append("circle")
       .attr("r", getNodeRadius)
       .attr("fill", getNodeColor)
-      .attr("stroke", (d) => d.id === focusedNodeId ? "#fbbf24" : "#ffffff")
-      .attr("stroke-width", (d) => d.id === focusedNodeId ? 3 : 1.5);
+      .attr("stroke", (d) => d.id === focusedNodeId ? "#fbbf24" : "rgba(255,255,255,0.9)")
+      .attr("stroke-width", (d) => d.id === focusedNodeId ? 3 : 2)
+      .style("filter", "url(#node-shadow)");
+
+    // Icon inside root node
+    node.filter(d => d.depth === 0)
+      .append("text")
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "central")
+      .attr("fill", "#ffffff")
+      .attr("font-size", "18px")
+      .attr("font-weight", "700")
+      .attr("pointer-events", "none")
+      .text("T");
 
     // Label below node
     node.append("text")
-      .attr("dy", (d) => getNodeRadius(d) + 14)
+      .attr("dy", (d) => getNodeRadius(d) + 16)
       .attr("text-anchor", "middle")
       .attr("fill", "#334155")
       .attr("font-size", "11px")
       .attr("font-weight", "600")
       .attr("font-family", "'Inter', sans-serif")
+      .attr("pointer-events", "none")
       .text(getNodeTypeLabel);
 
-    // Model name below label
+    // Model name sub-label
     node.append("text")
-      .attr("dy", (d) => getNodeRadius(d) + 26)
+      .attr("dy", (d) => getNodeRadius(d) + 28)
       .attr("text-anchor", "middle")
       .attr("fill", "#94a3b8")
       .attr("font-size", "9px")
       .attr("font-family", "'Inter', sans-serif")
+      .attr("pointer-events", "none")
       .text((d) => d.depth === 0 ? "" : d.modelName || "");
 
     // Hover interactions
     node
-      .on("mouseenter", function () {
-        d3.select(this).select(".hover-ring").attr("stroke-width", 3);
+      .on("mouseenter", function (event, d) {
+        d3.select(this).select(".hover-ring")
+          .transition().duration(200)
+          .attr("stroke-width", 3);
+        d3.select(this).select("circle:nth-child(2)")
+          .transition().duration(200)
+          .attr("r", getNodeRadius(d) + 3);
       })
-      .on("mouseleave", function () {
-        d3.select(this).select(".hover-ring").attr("stroke-width", 0);
+      .on("mouseleave", function (event, d) {
+        d3.select(this).select(".hover-ring")
+          .transition().duration(200)
+          .attr("stroke-width", 0);
+        d3.select(this).select("circle:nth-child(2)")
+          .transition().duration(200)
+          .attr("r", getNodeRadius(d));
       });
 
-    // Native tooltip
+    // Tooltip
     node.append("title").text((d) => {
       const typeStr = getNodeTypeLabel(d);
       return `${typeStr}\nModel: ${d.modelName || "N/A"}\nAgent: ${d.agentAddress.substring(0, 10)}...\nDepth: ${d.depth}`;
     });
 
-    // Tick
+    // Tick handler
     simulation.on("tick", () => {
-      linkLine
-        .attr("x1", (d) => (d.source as GraphNode).x!)
-        .attr("y1", (d) => (d.source as GraphNode).y!)
-        .attr("x2", (d) => {
-          const src = d.source as GraphNode;
-          const tgt = d.target as GraphNode;
-          const dx = tgt.x! - src.x!;
-          const dy = tgt.y! - src.y!;
-          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          const r = getNodeRadius(tgt);
-          return tgt.x! - (dx / dist) * r;
-        })
-        .attr("y2", (d) => {
-          const src = d.source as GraphNode;
-          const tgt = d.target as GraphNode;
-          const dx = tgt.x! - src.x!;
-          const dy = tgt.y! - src.y!;
-          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          const r = getNodeRadius(tgt);
-          return tgt.y! - (dy / dist) * r;
-        });
+      linkPath.attr("d", (d, i) => {
+        const src = d.source as GraphNode;
+        const tgt = d.target as GraphNode;
+        const curve = edgePairIndex[links.indexOf(d)] || 0;
+        return buildCurvedPath(src.x!, src.y!, tgt.x!, tgt.y!, getNodeRadius(tgt), curve);
+      });
 
       edgeLabel
         .attr("x", (d) => ((d.source as GraphNode).x! + (d.target as GraphNode).x!) / 2)
@@ -291,31 +378,30 @@ export default function GraphCanvas({
       node.attr("transform", (d) => `translate(${d.x},${d.y})`);
     });
 
-    // After simulation settles, release root pin and fit graph to viewport
+    // Auto-fit after simulation settles
     simulation.on("end", () => {
       if (rootNode) {
         rootNode.fx = null;
         rootNode.fy = null;
       }
 
-      // Auto-fit: compute bounding box of all nodes
       let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
       nodes.forEach(n => {
         if (n.x !== undefined && n.y !== undefined) {
-          minX = Math.min(minX, n.x - 60);
-          maxX = Math.max(maxX, n.x + 60);
-          minY = Math.min(minY, n.y - 60);
-          maxY = Math.max(maxY, n.y + 60);
+          minX = Math.min(minX, n.x - 80);
+          maxX = Math.max(maxX, n.x + 80);
+          minY = Math.min(minY, n.y - 80);
+          maxY = Math.max(maxY, n.y + 80);
         }
       });
 
       const graphWidth = maxX - minX;
       const graphHeight = maxY - minY;
-      const scale = Math.min(width / graphWidth, height / graphHeight, 1.5) * 0.85;
+      const scale = Math.min(width / graphWidth, height / graphHeight, 1.5) * 0.82;
       const tx = (width - graphWidth * scale) / 2 - minX * scale;
       const ty = (height - graphHeight * scale) / 2 - minY * scale;
 
-      svg.transition().duration(600).call(
+      svg.transition().duration(800).call(
         zoom.transform,
         d3.zoomIdentity.translate(tx, ty).scale(scale)
       );
