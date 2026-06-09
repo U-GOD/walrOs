@@ -2,6 +2,7 @@ import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
 import { queryTopicNodes, contribute } from "../clients/sui-client.js";
 import { storeBlob, retrieveBlob } from "../clients/walrus-client.js";
 import { generate } from "../clients/ollama-client.js";
+import { rememberArtifact, recallKnowledge } from "../clients/memwal-client.js";
 
 const ContributorState = Annotation.Root({
     topicId: Annotation<string>(),
@@ -43,6 +44,19 @@ async function loadTopic(state: typeof ContributorState.State) {
         console.warn("No nodes found for this topic. Is the topicId correct?");
     }
     
+    try {
+        console.log("Recalling richer context from MemWal...");
+        const recalledMemories = await recallKnowledge("context related to topic " + state.topicId, 3, state.topicId);
+        if (recalledMemories && recalledMemories.length > 0) {
+            knowledgeBase += `\n\n--- MemWal Recalled Context ---\n`;
+            for (const memory of recalledMemories) {
+                knowledgeBase += `- ${memory.text}\n`;
+            }
+        }
+    } catch (e) {
+        console.error("MemWal recall failed:", e);
+    }
+    
     return {
         existingKnowledge: knowledgeBase,
         parentIds
@@ -68,7 +82,16 @@ Produce a well-reasoned, concise markdown artifact (1-2 paragraphs) with your or
 async function storeBlobNode(state: typeof ContributorState.State) {
     console.log("Storing artifact on Walrus...");
     const blobId = await storeBlob(state.artifact);
-    console.log("Blob stored:", blobId);
+    console.log("Blob stored via Walrus:", blobId);
+
+    try {
+        console.log("Also remembering artifact in MemWal...");
+        const memwalResult = await rememberArtifact(state.artifact, state.topicId);
+        console.log("MemWal remembered with blob_id:", memwalResult.blob_id);
+    } catch (e) {
+        console.error("MemWal remember failed:", e);
+    }
+
     return { blobId };
 }
 
