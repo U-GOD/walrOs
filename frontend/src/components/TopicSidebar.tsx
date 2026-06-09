@@ -109,7 +109,7 @@ export default function TopicSidebar({
       <div className="mt-auto border-t border-hairline p-md bg-surface-bright">
         <nav className="flex flex-col">
           {[
-            { id: 'graph', icon: "account_tree", label: "Knowledge Graph" },
+            { id: 'graph', icon: "timeline", label: "Knowledge Timeline" },
             { id: 'blobs', icon: "data_object", label: "Research Blobs" },
             { id: 'status', icon: "query_stats", label: "System Status" },
           ].map(({ id, icon, label }) => {
