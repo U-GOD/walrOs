@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { runContributor } from './agents/contributor.js';
 import { runChallenger } from './agents/challenger.js';
 import { runSynthesizer } from './agents/synthesizer.js';
