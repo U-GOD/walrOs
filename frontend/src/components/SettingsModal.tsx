@@ -63,7 +63,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
 
               <div className="flex flex-col gap-[2px]">
-                <span className="font-label-sm text-label-sm text-on-surface-variant font-label-md">Cortex Package ID</span>
+                <span className="font-label-sm text-label-sm text-on-surface-variant font-label-md">WalrOS Package ID</span>
                 <div className="flex items-center justify-between bg-surface-container-lowest border-hairline p-2 rounded">
                   <span className="font-mono text-[12px] text-primary truncate mr-2">{PACKAGE_ID}</span>
                   <button className="text-outline hover:text-primary transition-cubic" onClick={() => copyToClipboard(PACKAGE_ID)}>
