@@ -22,10 +22,49 @@ export interface GraphData {
   links: GraphLink[];
 }
 
+/**
+ * Compute real depth for each node by walking the parent chain,
+ * since the contract hardcodes depth=1 for all non-root nodes.
+ */
+function computeDepths(events: KnowledgeNodeCreatedEvent[]): Record<string, number> {
+  const depthMap: Record<string, number> = {};
+  const parentMap: Record<string, string[]> = {};
+
+  for (const event of events) {
+    parentMap[event.node_id] = event.parent_ids || [];
+    if (event.depth === 0) {
+      depthMap[event.node_id] = 0;
+    }
+  }
+
+  function resolve(nodeId: string): number {
+    if (depthMap[nodeId] !== undefined) return depthMap[nodeId];
+    const parents = parentMap[nodeId] || [];
+    if (parents.length === 0) {
+      depthMap[nodeId] = 0;
+      return 0;
+    }
+    let maxParentDepth = 0;
+    for (const pid of parents) {
+      if (parentMap[pid] !== undefined) {
+        maxParentDepth = Math.max(maxParentDepth, resolve(pid));
+      }
+    }
+    depthMap[nodeId] = maxParentDepth + 1;
+    return depthMap[nodeId];
+  }
+
+  for (const event of events) {
+    resolve(event.node_id);
+  }
+  return depthMap;
+}
+
 export function transformEventsToGraph(events: KnowledgeNodeCreatedEvent[], topicText?: string): GraphData {
   const nodes: GraphNode[] = [];
   const links: GraphLink[] = [];
   const nodeMap = new Set<string>();
+  const depthMap = computeDepths(events);
 
   for (const event of events) {
     if (!nodeMap.has(event.node_id)) {
@@ -35,8 +74,8 @@ export function transformEventsToGraph(events: KnowledgeNodeCreatedEvent[], topi
         blobId: event.blob_id,
         agentAddress: event.agent_address,
         modelName: event.model_name,
-        depth: event.depth,
-        label: event.depth === 0 ? topicText : undefined,
+        depth: depthMap[event.node_id] ?? event.depth,
+        label: (depthMap[event.node_id] ?? event.depth) === 0 ? topicText : undefined,
       });
       nodeMap.add(event.node_id);
     }
