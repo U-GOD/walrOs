@@ -14,7 +14,7 @@ export default function Header({ topicCount, blobCount, onSettingsClick, onActiv
           hub
         </span>
         <span className="font-headline-md text-headline-md font-bold tracking-tighter text-primary font-headline-lg-mobile">
-          WALROS EXPLORER
+          WalrOS Explorer
         </span>
         <div className="hidden md:flex items-center ml-lg gap-sm px-sm py-1 bg-surface-container rounded-full border-hairline transition-cubic">
           <div className="w-2 h-2 rounded-full bg-green-500 indicator-pulse" />
