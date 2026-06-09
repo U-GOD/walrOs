@@ -9,10 +9,9 @@ interface NodeDetailPanelProps {
   node: GraphNode | null;
   isOpen: boolean;
   onClose: () => void;
-  onFocus: () => void;
 }
 
-export default function NodeDetailPanel({ node, isOpen, onClose, onFocus }: NodeDetailPanelProps) {
+export default function NodeDetailPanel({ node, isOpen, onClose }: NodeDetailPanelProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Fetch blob data if a node is selected
@@ -65,7 +64,7 @@ export default function NodeDetailPanel({ node, isOpen, onClose, onFocus }: Node
 
       {!node ? (
         <div className="flex-1 flex items-center justify-center p-md text-on-surface-variant font-body-md">
-          Select a node in the graph to view details.
+          Select a node in the timeline to view details.
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto p-gutter flex flex-col gap-xl">
@@ -200,12 +199,7 @@ export default function NodeDetailPanel({ node, isOpen, onClose, onFocus }: Node
             >
               View on Walrus Explorer
             </button>
-            <button 
-              className="w-full bg-surface-container text-primary font-label-md text-label-md uppercase tracking-widest py-3 border-hairline hover:bg-surface-container-low transition-cubic border"
-              onClick={onFocus}
-            >
-              Focus Node in Graph
-            </button>
+
           </div>
         </div>
       )}
