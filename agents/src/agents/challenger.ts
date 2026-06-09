@@ -2,6 +2,7 @@ import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
 import { queryTopicNodes, challenge } from "../clients/sui-client.js";
 import { storeBlob, retrieveBlob } from "../clients/walrus-client.js";
 import { generate } from "../clients/ollama-client.js";
+import { recallKnowledge } from "../clients/memwal-client.js";
 
 const ChallengerState = Annotation.Root({
     topicId: Annotation<string>(),
@@ -33,8 +34,17 @@ async function loadTopic(state: typeof ChallengerState.State) {
 
     try {
         content = await retrieveBlob(targetNode.blob_id);
+        
+        console.log("Recalling MemWal context for challenger...");
+        const recalledMemories = await recallKnowledge("context for challenge " + state.topicId, 3, state.topicId);
+        if (recalledMemories && recalledMemories.length > 0) {
+            content += `\n\n--- MemWal Recalled Context ---\n`;
+            for (const memory of recalledMemories) {
+                content += `- ${memory.text}\n`;
+            }
+        }
     } catch (e) {
-        console.error(`Failed to retrieve blob for node ${targetNode.node_id}`, e);
+        console.error(`Failed to retrieve blob or MemWal context for node ${targetNode.node_id}`, e);
         throw e;
     }
 
