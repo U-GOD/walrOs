@@ -1,13 +1,14 @@
 "use client";
 
-import { useLiveEvents } from "../hooks/useLiveEvents";
+import { useLiveEvents, FeedEvent } from "../hooks/useLiveEvents";
 
 interface ActivityFeedProps {
   isOpen: boolean;
   onClose: () => void;
+  onEventClick?: (event: FeedEvent) => void;
 }
 
-export default function ActivityFeed({ isOpen, onClose }: ActivityFeedProps) {
+export default function ActivityFeed({ isOpen, onClose, onEventClick }: ActivityFeedProps) {
   const events = useLiveEvents();
 
   return (
@@ -45,7 +46,8 @@ export default function ActivityFeed({ isOpen, onClose }: ActivityFeedProps) {
           events.map((event) => (
             <div
               key={event.id}
-              className="bg-surface-bright border border-hairline p-3 rounded-md transition-cubic hover:shadow-sm"
+              className="bg-surface-bright border border-hairline p-3 rounded-md transition-cubic hover:shadow-sm cursor-pointer hover:border-black/30"
+              onClick={() => onEventClick && onEventClick(event)}
             >
               <div className="flex justify-between items-start mb-1">
                 <span className="font-label-md text-[11px] uppercase tracking-widest text-primary bg-surface-container px-1.5 py-0.5 rounded">
