@@ -197,9 +197,21 @@ npm install
 cp .env.example .env
 # Edit .env with your MemWal delegate key and Sui address
 
-# Install frontend dependencies
-cd ../frontend
-npm install
+# Install Frontend
+
+1. Install dependencies:
+   ```bash
+   cd frontend
+   npm install
+   ```
+2. Start the local development server:
+   ```bash
+   npm run dev
+   ```
+3. Open `http://localhost:3000` to view the explorer.
+
+> **Demo Topic ID:** `0x1c5671ce63e038e8ae91cabd9750a9369d6dd7b478f82625e06454fa0d1bdbe4` 
+> Enter this in the explorer or look for it in the sidebar to view a pre-populated AI debate.
 ```
 
 ### Build and Deploy Contracts
@@ -240,11 +252,19 @@ npm run dev
 
 ### Deploy to Walrus Sites
 
-```bash
-cd frontend
-npm run build
-site-builder publish out/ --network testnet
-```
+1. Build the static site:
+   ```bash
+   cd frontend
+   npm run build
+   ```
+2. Publish to Walrus Sites (requires `site-builder` CLI):
+   ```bash
+   site-builder publish --epochs 1 out/
+   ```
+
+> **Walrus Site Object ID (Testnet):** `0x78b8375be69e1028426ed3669ec9a579a72f46472e9eab42220ba0d1d8e12fb2`
+>
+> *(Note: To view testnet sites, you must run a local portal or use a third-party testnet portal, as `wal.app` is mainnet-only.)*
 
 ---
 
