@@ -51,8 +51,12 @@ async function loadTopic(state: typeof SynthesizerState.State) {
         contributionContent = await retrieveBlob(targetContribution.blob_id);
         challengeContent = await retrieveBlob(targetChallenge.blob_id);
 
-        console.log("Recalling MemWal context for synthesizer...");
-        const recalledMemories = await recallKnowledge("context for synthesis " + state.topicId, 3, state.topicId);
+        let recalledMemories: any[] = [];
+        try {
+            recalledMemories = await recallKnowledge("context for synthesis " + state.topicId, 3, state.topicId);
+        } catch (e) {
+            console.error("MemWal recall failed:", e);
+        }
         if (recalledMemories && recalledMemories.length > 0) {
             challengeContent += `\n\n--- MemWal Recalled Context ---\n`;
             for (const memory of recalledMemories) {
@@ -91,6 +95,13 @@ Produce a concise, definitive synthesis in markdown format (1-2 paragraphs). Avo
 async function storeBlobNode(state: typeof SynthesizerState.State) {
     console.log("Storing synthesis on Walrus...");
     const blobId = await storeBlob(state.artifact);
+    try {
+        console.log("Also remembering artifact in MemWal...");
+        const memwalResult = await rememberArtifact(state.artifact, state.topicId);
+        console.log("MemWal remembered with blob_id:", memwalResult.blob_id);
+    } catch (e) {
+        console.error("MemWal remember failed:", e);
+    }
     return { blobId };
 }
 
