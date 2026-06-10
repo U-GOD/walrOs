@@ -20,6 +20,7 @@ export default function Home() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [pendingSelectNodeId, setPendingSelectNodeId] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ViewMode>("graph");
 
   const { topics, loading: topicsLoading } = useTopicList();
@@ -32,6 +33,18 @@ export default function Home() {
       setSelectedTopicId(topics[0].id);
     }
   }, [topics, selectedTopicId]);
+
+  // Handle cross-topic node selection from activity feed
+  useEffect(() => {
+    if (pendingSelectNodeId && graphData?.nodes) {
+      const node = graphData.nodes.find(n => n.id === pendingSelectNodeId);
+      if (node) {
+        setSelectedNode(node);
+        setDetailOpen(true);
+        setPendingSelectNodeId(null);
+      }
+    }
+  }, [pendingSelectNodeId, graphData]);
 
   const totalBlobs = topics.reduce((acc, topic) => acc + topic.nodeCount, 0);
 
@@ -91,7 +104,24 @@ export default function Home() {
           <SystemStatusView />
         )}
 
-        <ActivityFeed isOpen={activityOpen} onClose={() => setActivityOpen(false)} />
+        <ActivityFeed 
+          isOpen={activityOpen} 
+          onClose={() => setActivityOpen(false)} 
+          onEventClick={(event) => {
+            if (event.topicId) {
+              setSelectedTopicId(event.topicId);
+              setActiveView("graph");
+            }
+            if (event.nodeId) {
+              setPendingSelectNodeId(event.nodeId);
+            } else {
+              setDetailOpen(false);
+            }
+            if (window.innerWidth < 768) {
+              setActivityOpen(false);
+            }
+          }}
+        />
       </main>
 
       <SettingsModal
