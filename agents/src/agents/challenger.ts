@@ -35,8 +35,12 @@ async function loadTopic(state: typeof ChallengerState.State) {
     try {
         content = await retrieveBlob(targetNode.blob_id);
         
-        console.log("Recalling MemWal context for challenger...");
-        const recalledMemories = await recallKnowledge("context for challenge " + state.topicId, 3, state.topicId);
+        let recalledMemories: any[] = [];
+        try {
+            recalledMemories = await recallKnowledge("context for challenge " + state.topicId, 3, state.topicId);
+        } catch (e) {
+            console.error("MemWal recall failed:", e);
+        }
         if (recalledMemories && recalledMemories.length > 0) {
             content += `\n\n--- MemWal Recalled Context ---\n`;
             for (const memory of recalledMemories) {
@@ -88,6 +92,15 @@ Provide your counter-argument directly.`;
 async function storeBlobNode(state: typeof ChallengerState.State) {
     console.log("Storing challenge on Walrus...");
     const blobId = await storeBlob(state.artifact);
+    
+    try {
+        console.log("Also remembering artifact in MemWal...");
+        const memwalResult = await rememberArtifact(state.artifact, state.topicId);
+        console.log("MemWal remembered with blob_id:", memwalResult.blob_id);
+    } catch (e) {
+        console.error("MemWal remember failed:", e);
+    }
+
     return { blobId };
 }
 
