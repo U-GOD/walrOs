@@ -7,6 +7,8 @@ export type FeedEvent = {
   type: 'Topic' | 'Node';
   title: string;
   message: string;
+  topicId?: string;
+  nodeId?: string;
 };
 
 export function useLiveEvents() {
@@ -31,7 +33,8 @@ export function useLiveEvents() {
               timestamp: Date.now(),
               type: 'Topic',
               title: `New Topic Created`,
-              message: `"${topic.topic_text}" by ${topic.creator.substring(0, 6)}...`
+              message: `"${topic.topic_text}" by ${topic.creator.substring(0, 6)}...`,
+              topicId: topic.topic_id
             });
           }
         }
@@ -53,7 +56,9 @@ export function useLiveEvents() {
               timestamp: Date.now(),
               type: 'Node',
               title: `New ${actionType} Node`,
-              message: `Agent ${node.agent_address.substring(0, 6)}... added a node at depth ${node.depth}`
+              message: `Agent ${node.agent_address.substring(0, 6)}... added a node at depth ${node.depth}`,
+              topicId: node.topic_id,
+              nodeId: node.node_id
             });
           }
         }
