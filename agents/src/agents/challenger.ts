@@ -17,7 +17,12 @@ const ChallengerState = Annotation.Root({
 
 async function loadTopic(state: typeof ChallengerState.State) {
     console.log("Loading topic contributions...");
-    const nodes = await queryTopicNodes(state.topicId);
+    let nodes: any[] = [];
+    try {
+        nodes = await queryTopicNodes(state.topicId);
+    } catch (e) {
+        console.error("Failed to query topic nodes:", e);
+    }
     
     // Filter for contribution nodes (type 0) with a valid blob_id
     const contributions = nodes.filter((n: any) => 
@@ -91,7 +96,12 @@ Provide your counter-argument directly.`;
 
 async function storeBlobNode(state: typeof ChallengerState.State) {
     console.log("Storing challenge on Walrus...");
-    const blobId = await storeBlob(state.artifact);
+    let blobId = "";
+    try {
+        blobId = await storeBlob(state.artifact);
+    } catch (e) {
+        console.error("Failed to store blob on Walrus:", e);
+    }
     
     try {
         console.log("Also remembering artifact in MemWal...");
@@ -106,13 +116,19 @@ async function storeBlobNode(state: typeof ChallengerState.State) {
 
 async function registerOnChain(state: typeof ChallengerState.State) {
     console.log("Registering challenge on Sui...");
-    const result = await challenge(
-        state.topicId, 
-        state.blobId, 
-        state.modelName, 
-        state.disputedNodeId
-    );
-    return { txDigest: result.digest };
+    let txDigest = "";
+    try {
+        const result = await challenge(
+            state.topicId, 
+            state.blobId, 
+            state.modelName, 
+            state.disputedNodeId
+        );
+        txDigest = result.digest;
+    } catch (e) {
+        console.error("Failed to register challenge on Sui:", e);
+    }
+    return { txDigest };
 }
 
 const graph = new StateGraph(ChallengerState)
@@ -143,7 +159,12 @@ export async function runChallenger(topicId: string, modelName: string) {
         txDigest: ""
     };
     
-    const finalState = await app.invoke(initialState);
-    console.log(`Challenger Agent finished. TX Digest: ${finalState.txDigest}`);
-    return finalState;
+    try {
+        const finalState = await app.invoke(initialState);
+        console.log(`Challenger Agent finished. TX Digest: ${finalState.txDigest}`);
+        return finalState;
+    } catch (e) {
+        console.error("Challenger Agent execution failed:", e);
+        return initialState;
+    }
 }
