@@ -18,7 +18,12 @@ const SynthesizerState = Annotation.Root({
 
 async function loadTopic(state: typeof SynthesizerState.State) {
     console.log("Loading topic to find unresolved challenges...");
-    const nodes = await queryTopicNodes(state.topicId);
+    let nodes: any[] = [];
+    try {
+        nodes = await queryTopicNodes(state.topicId);
+    } catch (e) {
+        console.error("Failed to query topic nodes:", e);
+    }
     
     // Find a challenge node (type 1)
     const challenges = nodes.filter((n: any) => Number(n.node_type) === 1 && n.blob_id);
@@ -94,7 +99,12 @@ Produce a concise, definitive synthesis in markdown format (1-2 paragraphs). Avo
 
 async function storeBlobNode(state: typeof SynthesizerState.State) {
     console.log("Storing synthesis on Walrus...");
-    const blobId = await storeBlob(state.artifact);
+    let blobId = "";
+    try {
+        blobId = await storeBlob(state.artifact);
+    } catch (e) {
+        console.error("Failed to store blob on Walrus:", e);
+    }
     try {
         console.log("Also remembering artifact in MemWal...");
         const memwalResult = await rememberArtifact(state.artifact, state.topicId);
@@ -107,13 +117,19 @@ async function storeBlobNode(state: typeof SynthesizerState.State) {
 
 async function registerOnChain(state: typeof SynthesizerState.State) {
     console.log("Registering synthesis on Sui...");
-    const result = await refine(
-        state.topicId, 
-        state.blobId, 
-        state.modelName, 
-        [state.contributionId, state.challengeId]
-    );
-    return { txDigest: result.digest };
+    let txDigest = "";
+    try {
+        const result = await refine(
+            state.topicId, 
+            state.blobId, 
+            state.modelName, 
+            [state.contributionId, state.challengeId]
+        );
+        txDigest = result.digest;
+    } catch (e) {
+        console.error("Failed to register synthesis on Sui:", e);
+    }
+    return { txDigest };
 }
 
 const graph = new StateGraph(SynthesizerState)
@@ -143,7 +159,12 @@ export async function runSynthesizer(topicId: string, modelName: string) {
         txDigest: ""
     };
     
-    const finalState = await app.invoke(initialState);
-    console.log(`Synthesizer Agent finished. TX Digest: ${finalState.txDigest}`);
-    return finalState;
+    try {
+        const finalState = await app.invoke(initialState);
+        console.log(`Synthesizer Agent finished. TX Digest: ${finalState.txDigest}`);
+        return finalState;
+    } catch (e) {
+        console.error("Synthesizer Agent execution failed:", e);
+        return initialState;
+    }
 }
