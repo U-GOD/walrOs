@@ -16,12 +16,6 @@ export default function Header({ topicCount, blobCount, onSettingsClick, onActiv
         <span className="font-headline-md text-headline-md font-bold tracking-tighter text-primary font-headline-lg-mobile">
           WalrOS Explorer
         </span>
-        <div className="hidden md:flex items-center ml-lg gap-sm px-sm py-1 bg-surface-container rounded-full border-hairline transition-cubic">
-          <div className="w-2 h-2 rounded-full bg-green-500 indicator-pulse" />
-          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase font-label-md">
-            Sui Testnet — Connected
-          </span>
-        </div>
       </div>
 
       {/* Center: Metrics */}
