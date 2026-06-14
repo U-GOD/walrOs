@@ -13,26 +13,33 @@ export function useWalrusBlob(blobId: string | null) {
     let mounted = true;
     if (!blobId) {
       setContent(null);
+      setError(null);
       return;
     }
 
     if (cache.current[blobId]) {
       setContent(cache.current[blobId]);
+      setError(null);
       return;
     }
 
     async function loadBlob() {
       try {
         setLoading(true);
+        setError(null);
+        console.log(`[useWalrusBlob] Fetching blob: ${blobId}`);
         const data = await fetchBlob(blobId!);
         if (mounted) {
+          console.log(`[useWalrusBlob] Success, got ${data.length} chars`);
           cache.current[blobId!] = data;
           setContent(data);
           setLoading(false);
         }
       } catch (err: any) {
         if (mounted) {
+          console.error(`[useWalrusBlob] Error fetching blob ${blobId}:`, err.message);
           setError(err);
+          setContent(null);
           setLoading(false);
         }
       }
