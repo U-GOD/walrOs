@@ -167,13 +167,33 @@ export default function NodeDetailPanel({ node, isOpen, onClose }: NodeDetailPan
                 </div>
               )}
               {error && (
-                <div className="text-on-surface-variant italic font-label-md text-label-md">
-                  Content stored on Walrus (testnet blob may have expired)
+                <div className="flex flex-col gap-2">
+                  <div className="text-error font-label-md text-label-md flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[16px]">warning</span>
+                    Blob Expired or Unavailable
+                  </div>
+                  <p className="text-on-surface-variant text-xs">
+                    This blob was stored with a short epoch duration on testnet and has expired.
+                    Re-run the agent pipeline to generate fresh data.
+                  </p>
+                  {node.blobId && (
+                    <button
+                      className="text-xs text-secondary underline text-left mt-1 hover:opacity-80"
+                      onClick={() => window.open(`https://aggregator.walrus-testnet.walrus.space/v1/blobs/${node.blobId}`, "_blank")}
+                    >
+                      Try direct aggregator link →
+                    </button>
+                  )}
                 </div>
               )}
               {!loading && !error && !content && node.depth === 0 && (
                 <div className="text-on-surface-variant italic font-label-md text-label-md">
                   Root node has no attached blob.
+                </div>
+              )}
+              {!loading && !error && !content && node.depth !== 0 && !node.blobId && (
+                <div className="text-on-surface-variant italic font-label-md text-label-md">
+                  No blob attached to this node.
                 </div>
               )}
               {!loading && !error && content && (
