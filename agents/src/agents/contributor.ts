@@ -16,7 +16,12 @@ const ContributorState = Annotation.Root({
 
 async function loadTopic(state: typeof ContributorState.State) {
     console.log("Loading topic and existing knowledge...");
-    const nodes = await queryTopicNodes(state.topicId);
+    let nodes: any[] = [];
+    try {
+        nodes = await queryTopicNodes(state.topicId);
+    } catch (e) {
+        console.error("Failed to query topic nodes:", e);
+    }
     
     let knowledgeBase = "";
     let parentIds: string[] = [];
@@ -81,8 +86,14 @@ Produce a well-reasoned, concise markdown artifact (1-2 paragraphs) with your or
 
 async function storeBlobNode(state: typeof ContributorState.State) {
     console.log("Storing artifact on Walrus...");
-    const blobId = await storeBlob(state.artifact);
-    console.log("Blob stored via Walrus:", blobId);
+    let blobId = "";
+    try {
+        blobId = await storeBlob(state.artifact);
+        console.log("Blob stored via Walrus:", blobId);
+    } catch (e) {
+        console.error("Failed to store blob on Walrus:", e);
+        // Continue without a valid blobId if walrus fails, or return empty string
+    }
 
     try {
         console.log("Also remembering artifact in MemWal...");
@@ -97,9 +108,14 @@ async function storeBlobNode(state: typeof ContributorState.State) {
 
 async function registerOnChain(state: typeof ContributorState.State) {
     console.log("Registering contribution on Sui...");
-    const result = await contribute(state.topicId, state.blobId, state.modelName, state.parentIds);
-    const txDigest = result.digest;
-    console.log("Registered! TX Digest:", txDigest);
+    let txDigest = "";
+    try {
+        const result = await contribute(state.topicId, state.blobId, state.modelName, state.parentIds);
+        txDigest = result.digest;
+        console.log("Registered! TX Digest:", txDigest);
+    } catch (e) {
+        console.error("Failed to register contribution on Sui:", e);
+    }
     return { txDigest };
 }
 
@@ -128,7 +144,12 @@ export async function runContributor(topicId: string, modelName: string) {
         txDigest: ""
     };
     
-    const finalState = await app.invoke(initialState);
-    console.log("Contributor Agent finished successfully.");
-    return finalState;
+    try {
+        const finalState = await app.invoke(initialState);
+        console.log("Contributor Agent finished successfully.");
+        return finalState;
+    } catch (e) {
+        console.error("Contributor Agent execution failed:", e);
+        return initialState;
+    }
 }
