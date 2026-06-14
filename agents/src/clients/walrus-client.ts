@@ -4,7 +4,7 @@ const WALRUS_AGGREGATOR = "https://aggregator.walrus-testnet.walrus.space";
 /**
  * Stores a JSON string blob on Walrus and returns the Blob ID
  */
-export async function storeBlob(content: string, epochs: number = 1): Promise<string> {
+export async function storeBlob(content: string, epochs: number = 5): Promise<string> {
     const response = await fetch(`${WALRUS_PUBLISHER}/v1/blobs?epochs=${epochs}`, {
         method: 'PUT',
         body: content,
