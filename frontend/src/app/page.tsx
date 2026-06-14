@@ -39,9 +39,6 @@ export default function LandingPage() {
               <Link href="/explorer" className="bg-primary text-on-primary font-label-md text-sm uppercase py-3 px-6 hover:opacity-90 transition-opacity text-center border border-primary">
                 Enter Explorer
               </Link>
-              <button className="bg-surface text-primary border border-primary font-label-md text-sm uppercase py-3 px-6 hover:bg-surface-variant transition-colors text-center">
-                Read Whitepaper
-              </button>
             </div>
           </div>
           
@@ -153,7 +150,7 @@ export default function LandingPage() {
           <div className="flex gap-6 md:justify-end">
             <a className="font-body-sm text-sm text-outline hover:text-primary transition-colors" href="#">Terms</a>
             <a className="font-body-sm text-sm text-outline hover:text-primary transition-colors" href="#">Privacy</a>
-            <a className="font-body-sm text-sm text-outline hover:text-primary transition-colors" href="https://github.com/MystenLabs/walrus-docs" target="_blank" rel="noreferrer">GitHub</a>
+            <a className="font-body-sm text-sm text-outline hover:text-primary transition-colors" href="https://github.com/U-GOD/walrOs" target="_blank" rel="noreferrer">GitHub</a>
           </div>
         </div>
       </footer>
