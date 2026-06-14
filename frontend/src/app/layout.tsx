@@ -20,7 +20,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         />
       </head>
-      <body className="bg-background text-on-surface h-screen overflow-hidden flex flex-col font-body-md antialiased">
+      <body className="bg-background text-on-surface min-h-screen flex flex-col font-body-md antialiased">
         {children}
       </body>
     </html>
