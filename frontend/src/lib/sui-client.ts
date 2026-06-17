@@ -102,6 +102,13 @@ async function fetchAll(): Promise<CachedData> {
   return inflight;
 }
 
+export async function forceRefresh(): Promise<void> {
+  cached = null;
+  backoffMs = 0;
+  backoffUntil = 0;
+  await fetchAll();
+}
+
 // ---------------------------------------------------------------------------
 // Public API — same interface as before
 // ---------------------------------------------------------------------------
