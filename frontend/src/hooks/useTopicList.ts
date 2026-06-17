@@ -50,7 +50,38 @@ export function useTopicList() {
     }
     loadTopics();
     return () => { mounted = false; };
-  }, []);
+  }, [error]); // Added error as a dummy dependency to allow re-triggering
 
-  return { topics, loading, error };
+  const refetch = async () => {
+    // Force a re-fetch by clearing the cache
+    const { forceRefresh } = await import('../lib/sui-client');
+    await forceRefresh();
+    // Setting error to null will re-trigger the useEffect if it was previously an error,
+    // but better to just reload inline:
+    try {
+      setLoading(true);
+      const { queryAllTopics, queryAllNodes } = await import('../lib/sui-client');
+      const [allTopics, allNodes] = await Promise.all([
+        queryAllTopics(),
+        queryAllNodes(),
+      ]);
+      const nodeCountByTopic = new Map<string, number>();
+      for (const node of allNodes) {
+        nodeCountByTopic.set(node.topic_id, (nodeCountByTopic.get(node.topic_id) ?? 0) + 1);
+      }
+      const topicsWithCounts = allTopics.map(t => ({
+        id: t.topic_id,
+        label: t.topic_text,
+        address: t.creator,
+        nodeCount: nodeCountByTopic.get(t.topic_id) ?? 0,
+      }));
+      setTopics(topicsWithCounts);
+    } catch (e: any) {
+      setError(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { topics, loading, error, refetch };
 }
