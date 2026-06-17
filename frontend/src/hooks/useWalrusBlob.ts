@@ -37,7 +37,7 @@ export function useWalrusBlob(blobId: string | null) {
         }
       } catch (err: any) {
         if (mounted) {
-          console.error(`[useWalrusBlob] Error fetching blob ${blobId}:`, err.message);
+          console.warn(`[useWalrusBlob] Error fetching blob ${blobId}:`, err.message);
           setError(err);
           setContent(null);
           setLoading(false);
