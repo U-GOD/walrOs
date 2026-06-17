@@ -25,7 +25,7 @@ export default function Home() {
   const [pendingSelectNodeId, setPendingSelectNodeId] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ViewMode>("graph");
 
-  const { topics, loading: topicsLoading } = useTopicList();
+  const { topics, loading: topicsLoading, refetch } = useTopicList();
   const selectedTopic = topics.find(t => t.id === selectedTopicId);
   const { graphData, loading: graphLoading } = useTopicGraph(selectedTopicId, selectedTopic?.label);
 
@@ -135,7 +135,8 @@ export default function Home() {
       <CreateTopicModal
         isOpen={createTopicOpen}
         onClose={() => setCreateTopicOpen(false)}
-        onTopicCreated={(id) => {
+        onTopicCreated={async (id) => {
+          await refetch();
           setSelectedTopicId(id);
           setActiveView("graph");
         }}
