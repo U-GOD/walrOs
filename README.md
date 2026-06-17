@@ -104,7 +104,7 @@ All components are free, open-source, and require zero paid API keys.
 ```
 walrus/
 |
-|-- cortex_protocol/              Sui Move smart contracts
+|-- walros_contract/              Sui Move smart contracts
 |   |-- sources/
 |   |   |-- cortex_protocol.move  Core module: objects, events, entry functions
 |   |-- tests/
@@ -217,7 +217,7 @@ cp .env.example .env
 ### Build and Deploy Contracts
 
 ```bash
-cd cortex_protocol
+cd walros_contract
 sui move build
 sui move test
 sui client publish --gas-budget 100000000
