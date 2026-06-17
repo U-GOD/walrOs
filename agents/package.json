@@ -6,13 +6,16 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "dev": "tsx watch src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "server": "tsx src/server.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/node": "^25.9.1",
     "tsx": "^4.7.1",
     "typescript": "^6.0.3"
@@ -21,6 +24,8 @@
     "@langchain/langgraph": "^1.3.2",
     "@mysten-incubation/memwal": "^0.0.4",
     "@mysten/sui": "^2.17.0",
-    "dotenv": "^17.4.2"
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
   }
 }
