@@ -9,6 +9,7 @@ import ActivityFeed from "@/components/ActivityFeed";
 import SettingsModal from "@/components/SettingsModal";
 import BlobsListView from "@/components/BlobsListView";
 import SystemStatusView from "@/components/SystemStatusView";
+import CreateTopicModal from "@/components/CreateTopicModal";
 import { useTopicGraph } from "@/hooks/useTopicGraph";
 import { useTopicList } from "@/hooks/useTopicList";
 import { GraphNode } from "@/lib/graph-helpers";
@@ -19,6 +20,7 @@ export default function Home() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
+  const [createTopicOpen, setCreateTopicOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [pendingSelectNodeId, setPendingSelectNodeId] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ViewMode>("graph");
@@ -55,6 +57,7 @@ export default function Home() {
         blobCount={totalBlobs}
         onSettingsClick={() => setSettingsOpen(true)}
         onActivityClick={() => setActivityOpen(true)}
+        onNewTopicClick={() => setCreateTopicOpen(true)}
       />
 
       <main className="flex-1 flex mt-[56px] h-[calc(100vh-56px)] relative">
@@ -127,6 +130,15 @@ export default function Home() {
       <SettingsModal
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+      />
+
+      <CreateTopicModal
+        isOpen={createTopicOpen}
+        onClose={() => setCreateTopicOpen(false)}
+        onTopicCreated={(id) => {
+          setSelectedTopicId(id);
+          setActiveView("graph");
+        }}
       />
     </div>
   );
