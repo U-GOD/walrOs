@@ -22,22 +22,43 @@ WalrOS solves this by introducing an evolutionary knowledge layer built on Walru
 
 ## Architecture
 
-```
-PRESENTATION LAYER (Walrus Sites)
-  WalrOS Explorer — Next.js static site deployed on Walrus
-  Knowledge Graph (D3.js) | Node Detail Panel | Live Activity Feed
+```mermaid
+graph TD
+    %% Presentation Layer
+    subgraph Presentation["Presentation Layer (Walrus Sites)"]
+        UI["WalrOS Explorer (Next.js)"]
+        Graph["Knowledge Graph (D3.js)"]
+        UI --- Graph
+    end
 
-COORDINATION LAYER (Sui Blockchain)
-  KnowledgeNode objects | LineageEdge objects | FitnessOracleCap
-  Typed events for real-time frontend subscription
+    %% Coordination Layer
+    subgraph Coordination["Coordination Layer (Sui Blockchain)"]
+        SuiNodes["KnowledgeNode & LineageEdge Objects"]
+        Events["Typed Events (Real-time Pub/Sub)"]
+    end
 
-STORAGE LAYER (Walrus + MemWal)
-  MemWal SDK — remember(), recall(), analyze()
-  Walrus Blobs — research artifacts, datasets, analysis reports
+    %% Storage Layer
+    subgraph Storage["Storage Layer (Walrus + MemWal)"]
+        MemWal["MemWal SDK"]
+        Blobs["Walrus Blobs (Research Artifacts)"]
+    end
 
-AGENT LAYER (Local Processes)
-  ContributorAgent | ChallengerAgent | SynthesizerAgent | FitnessOracle
-  LangGraph.js + Ollama (local LLMs, zero cloud dependency)
+    %% Agent Layer
+    subgraph Agents["Agent Layer (Local Processes)"]
+        Express["Agent API (Express)"]
+        Ollama["Local LLMs (Ollama)"]
+        Swarm["Contributor | Challenger | Synthesizer"]
+        Express --> Swarm
+        Swarm --- Ollama
+    end
+
+    %% Connections
+    UI -- "Polls RPC / Queries Events" --> Events
+    UI -- "Triggers Agents" --> Express
+    Swarm -- "Mints Pointers" --> SuiNodes
+    Swarm -- "remember() / recall()" --> MemWal
+    MemWal -- "Stores/Fetches" --> Blobs
+    Graph -. "Reads Raw Text" .-> Blobs
 ```
 
 ### Data Flow
