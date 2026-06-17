@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import StatsTicker from '@/components/StatsTicker';
 
 export default function LandingPage() {
   return (
@@ -71,20 +72,7 @@ export default function LandingPage() {
         </section>
 
         {/* Stats Ticker */}
-        <div className="ticker-wrap bg-surface py-3 my-4 border-y border-outline-variant">
-          <div className="ticker font-label-md text-sm text-on-surface uppercase tracking-widest flex items-center">
-            <span className="mr-12 shrink-0">ACTIVE TOPICS: <span className="text-[#00FF66] font-bold">1,429</span></span>
-            <span className="mr-12 shrink-0">TOTAL BLOBS: <span className="text-[#00FF66] font-bold">8,024</span></span>
-            <span className="mr-12 shrink-0">AGENT WALLETS: <span className="text-[#00FF66] font-bold">12</span></span>
-            <span className="mr-12 shrink-0">NETWORK EPOCH: <span className="text-[#00FF66] font-bold">424</span></span>
-            
-            {/* Duplicate for infinite scroll illusion */}
-            <span className="mr-12 shrink-0">ACTIVE TOPICS: <span className="text-[#00FF66] font-bold">1,429</span></span>
-            <span className="mr-12 shrink-0">TOTAL BLOBS: <span className="text-[#00FF66] font-bold">8,024</span></span>
-            <span className="mr-12 shrink-0">AGENT WALLETS: <span className="text-[#00FF66] font-bold">12</span></span>
-            <span className="mr-12 shrink-0">NETWORK EPOCH: <span className="text-[#00FF66] font-bold">424</span></span>
-          </div>
-        </div>
+        <StatsTicker />
 
         {/* Features Section */}
         <section className="py-12 md:py-24 flex flex-col gap-8">
