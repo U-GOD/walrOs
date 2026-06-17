@@ -1,6 +1,7 @@
 "use client";
 
 import { TopicItem } from "../hooks/useTopicList";
+import ResearchControlPanel from "./ResearchControlPanel";
 
 export type ViewMode = 'graph' | 'blobs' | 'status';
 
@@ -62,44 +63,50 @@ export default function TopicSidebar({
           topics.map((topic) => {
             const isActive = topic.id === selectedTopicId;
             return (
-              <button
-                key={topic.id}
-                onClick={() => onTopicSelect(topic.id)}
-                className={`
-                  flex flex-col items-start gap-[2px] py-3 px-4 text-left w-full
-                  border-l-[3px] transition-cubic group
-                  ${
-                    isActive
-                      ? "bg-[#f5f5f5] border-primary text-primary"
-                      : "border-transparent text-on-surface-variant hover:bg-surface-container"
-                  }
-                `}
-              >
-                <div className="flex items-center justify-between w-full">
-                  <span
-                    className={`font-headline-sm text-[16px] line-clamp-1 ${
-                      isActive ? "text-primary" : "group-hover:text-primary transition-cubic"
-                    }`}
-                  >
-                    {topic.label}
-                  </span>
-                  <span
-                    className={`font-label-sm text-label-sm uppercase px-2 py-[2px] rounded font-label-md flex-shrink-0 ml-2 ${
+              <div key={topic.id} className="flex flex-col">
+                <button
+                  onClick={() => onTopicSelect(topic.id)}
+                  className={`
+                    flex flex-col items-start gap-[2px] py-3 px-4 text-left w-full
+                    border-l-[3px] transition-cubic group
+                    ${
                       isActive
-                        ? "bg-surface-container-high text-on-surface-variant"
-                        : "bg-surface-container text-on-surface-variant group-hover:bg-surface-container-high transition-cubic"
-                    }`}
-                  >
-                    {topic.nodeCount} Node{topic.nodeCount !== 1 && "s"}
+                        ? "bg-[#f5f5f5] border-primary text-primary"
+                        : "border-transparent text-on-surface-variant hover:bg-surface-container"
+                    }
+                  `}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span
+                      className={`font-headline-sm text-[16px] line-clamp-1 ${
+                        isActive ? "text-primary" : "group-hover:text-primary transition-cubic"
+                      }`}
+                    >
+                      {topic.label}
+                    </span>
+                    <span
+                      className={`font-label-sm text-label-sm uppercase px-2 py-[2px] rounded font-label-md flex-shrink-0 ml-2 ${
+                        isActive
+                          ? "bg-surface-container-high text-on-surface-variant"
+                          : "bg-surface-container text-on-surface-variant group-hover:bg-surface-container-high transition-cubic"
+                      }`}
+                    >
+                      {topic.nodeCount} Node{topic.nodeCount !== 1 && "s"}
+                    </span>
+                  </div>
+                  <span className="font-label-md text-label-md text-outline font-normal font-mono text-[12px] mt-1">
+                    Topic ID: {topic.id.substring(0, 10)}...
                   </span>
-                </div>
-                <span className="font-label-md text-label-md text-outline font-normal font-mono text-[12px] mt-1">
-                  Topic ID: {topic.id.substring(0, 10)}...
-                </span>
-                <span className="font-label-md text-label-md text-outline font-normal font-mono text-[11px] mt-0.5">
-                  Creator: {topic.address.substring(0, 8)}...
-                </span>
-              </button>
+                  <span className="font-label-md text-label-md text-outline font-normal font-mono text-[11px] mt-0.5">
+                    Creator: {topic.address.substring(0, 8)}...
+                  </span>
+                </button>
+                {isActive && (
+                  <div className="px-4 pb-3 border-l-[3px] border-primary bg-[#f5f5f5]">
+                    <ResearchControlPanel topicId={topic.id} />
+                  </div>
+                )}
+              </div>
             );
           })
         )}
